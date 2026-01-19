@@ -1,0 +1,387 @@
+.admin-dashboard {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+/* Header */
+.admin-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 74px;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 1000;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.admin-header-logo {
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: 55px;
+  object-fit: contain;
+}
+
+.header-center {
+  text-align: center;
+  flex: 1;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.header-center h1 {
+  font-size: 28px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #111827;
+  margin: 0;
+}
+
+.header-center h2 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #3b82f6;
+  margin: 4px 0 0 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+  z-index: 1;
+}
+
+.admin-email {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background-color: #dc2626;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #b91c1c;
+}
+
+/* Navigation Tabs */
+.admin-nav {
+  position: fixed;
+  top: 74px;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0;
+  display: flex;
+  gap: 0;
+  z-index: 999;
+}
+
+.nav-btn {
+  flex: 1;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.nav-btn:hover {
+  background-color: #f9fafb;
+  color: #1f2937;
+}
+
+.nav-btn.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+}
+
+.nav-btn svg {
+  flex-shrink: 0;
+}
+
+/* Hamburger Menu */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #1f2937;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.hamburger-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.mobile-menu-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-menu {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 280px;
+  height: 100%;
+  background-color: #ffffff;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.mobile-menu-header {
+  padding: 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mobile-admin-email {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.close-menu-btn {
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-menu-btn:hover {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.mobile-menu-nav {
+  display: flex;
+  flex-direction: column;
+  padding: 12px 0;
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  font-size: 15px;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.mobile-menu-item:hover {
+  background-color: #f9fafb;
+  color: #1f2937;
+}
+
+.mobile-menu-item.active {
+  background-color: #eff6ff;
+  border-left-color: #667eea;
+  color: #667eea;
+}
+
+.mobile-menu-item.logout {
+  margin-top: auto;
+  color: #dc2626;
+  border-top: 1px solid #e5e7eb;
+}
+
+.mobile-menu-item.logout:hover {
+  background-color: #fee2e2;
+}
+
+.mobile-only {
+  display: none;
+}
+
+.desktop-only {
+  display: flex;
+}
+
+/* Content Area */
+.admin-content {
+  margin-top: 130px;
+  padding: 30px;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+
+  .desktop-only {
+    display: none !important;
+  }
+
+  .mobile-menu-overlay {
+    display: block;
+  }
+
+  .admin-header {
+    height: auto;
+    min-height: 74px;
+    padding: 12px 20px;
+  }
+
+  .header-left {
+    position: static;
+  }
+
+  .admin-header-logo {
+    height: 45px;
+  }
+
+  .header-center {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .header-center h1 {
+    font-size: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  .header-center h2 {
+    font-size: 14px;
+  }
+
+  .header-right {
+    gap: 12px;
+  }
+
+  .admin-email {
+    display: none;
+  }
+
+  .admin-content {
+    margin-top: 90px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header {
+    height: auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+
+  .header-left {
+    order: 1;
+    width: auto;
+  }
+
+  .admin-header-logo {
+    height: 40px;
+  }
+
+  .header-center {
+    order: 2;
+    flex: 1;
+    position: static;
+    transform: none;
+  }
+
+  .header-center h1 {
+    font-size: 16px;
+  }
+
+  .header-center h2 {
+    font-size: 12px;
+  }
+
+  .header-right {
+    order: 3;
+    margin-left: 0;
+  }
+
+  .mobile-menu {
+    width: 100%;
+  }
+
+  .admin-content {
+    margin-top: 100px;
+  }
+}

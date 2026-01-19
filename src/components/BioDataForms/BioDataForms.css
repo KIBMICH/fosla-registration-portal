@@ -1,0 +1,248 @@
+
+/* =========================
+   GLOBAL RESET
+========================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Segoe UI", Roboto, sans-serif;
+  background-color: #f5f6f7; /* milky ash background */
+  color: #1f2937;
+}
+
+/* =========================
+   FIXED HEADER
+========================= */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 74px; /* restored header height */
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  z-index: 1000;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* =========================
+   HEADER LOGO - LEFT
+========================= */
+.header-left {
+  position: absolute;
+  left: 20px;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.header-logo {
+  max-width: none;
+  max-height: none;
+  width: auto;
+  height: 55px; /* slightly bigger than original */
+  object-fit: contain;
+}
+
+/* =========================
+   HEADER TEXT - CENTERED
+========================= */
+.header-text {
+  text-align: center;
+}
+
+.header-text h1 {
+  font-size: 28px;
+  font-weight: 900; /* VERY VERY BOLD */
+  letter-spacing: 1px;
+  color: #111827;
+}
+
+.header-text h2 {
+  display: none; /* remove subtitle */
+}
+
+/* =========================
+   PAGE WRAPPER
+========================= */
+.page-wrapper {
+  min-height: 100vh;
+  padding-top: 100px; /* space for fixed header */
+  padding-left: 16px;
+  padding-right: 16px;
+  display: flex;
+  justify-content: center;
+  background-color: #f5f6f7; /* milky ash */
+}
+
+/* =========================
+   FORM CARD
+========================= */
+.form-card {
+  width: 100%;
+  max-width: 580px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   FORM HEADER (INSIDE CARD)
+========================= */
+.form-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.form-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.form-header h2 {
+  font-size: 17px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.form-header p {
+  font-size: 14px;
+  color: #6b7280;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* =========================
+   FORM SECTION TITLE
+========================= */
+.registration-form h3 {
+  font-size: 15px;
+  margin-bottom: 16px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+/* =========================
+   FORM GROUPS
+========================= */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 12px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #94a3b8;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+/* =========================
+   RADIO BUTTONS
+========================= */
+.radio-group {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+/* =========================
+   SUBMIT BUTTON (SOFT BLUE)
+========================= */
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  margin-top: 18px;
+  border: none;
+  border-radius: 12px;
+  background-color: #3b82f6; /* soft blue */
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.submit-btn:hover {
+  background-color: #2563eb;
+}
+
+.submit-btn:active {
+  transform: scale(0.97);
+}
+
+/* =========================
+   TABLET
+========================= */
+@media (min-width: 640px) {
+  .header-logo {
+    height: 60px;
+  }
+  .header-text h1 {
+    font-size: 30px;
+  }
+  .form-card {
+    padding: 36px;
+  }
+}
+
+/* =========================
+   DESKTOP
+========================= */
+@media (min-width: 1024px) {
+  .page-wrapper {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .header-logo {
+    height: 65px;
+  }
+  .form-card {
+    max-width: 620px;
+  }
+  .submit-btn {
+    font-size: 16px;
+  }
+}
+
+/* =========================
+   LARGE SCREENS
+========================= */
+@media (min-width: 1440px) {
+  .header-logo {
+    height: 70px;
+  }
+  .form-card {
+    max-width: 660px;
+  }
+}
