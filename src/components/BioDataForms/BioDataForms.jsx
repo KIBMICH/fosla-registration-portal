@@ -58,8 +58,11 @@ function BiodataForms() {
         email: formData.get('email'),
       };
 
+      console.log('📝 Submitting registration:', registrationData);
+
       // Register for event
       const registrationResult = await eventService.registerForEvent(registrationData);
+      console.log('✅ Registration result:', registrationResult);
 
       if (!registrationResult.success) {
         setError(registrationResult.error || 'Registration failed');
@@ -67,25 +70,28 @@ function BiodataForms() {
         return;
       }
 
+      const { registrationId, reference } = registrationResult.data;
+      console.log('🎫 Got registration ID:', registrationId, 'Reference:', reference);
+
       // Initialize payment
+      console.log('💳 Initializing payment...');
       const paymentResult = await paymentService.initializePayment({
-        registrationId: registrationResult.data.registrationId,
-        reference: registrationResult.data.reference,
+        registrationId,
+        reference,
       });
+      console.log('💰 Payment result:', paymentResult);
 
       if (paymentResult.success && paymentResult.data?.authorization_url) {
+        console.log('🚀 Redirecting to Paystack:', paymentResult.data.authorization_url);
         // Redirect to Paystack payment page
         window.location.href = paymentResult.data.authorization_url;
       } else {
-        // Fallback to await payment page
-        navigate("/await-payment", {
-          state: {
-            registrationId: registrationResult.data.registrationId,
-            reference: registrationResult.data.reference,
-          }
-        });
+        console.warn('⚠️ No authorization_url received, showing error');
+        setError('Payment initialization failed. Please try again or contact support.');
+        setLoading(false);
       }
     } catch (err) {
+      console.error('❌ Error during registration/payment:', err);
       setError('An unexpected error occurred. Please try again.');
       setLoading(false);
     }

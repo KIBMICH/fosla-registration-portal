@@ -16,11 +16,18 @@ class PaymentService {
         API_ENDPOINTS.INITIALIZE_PAYMENT,
         paymentData
       );
+      
+      console.log('💳 Payment API Response:', response);
+      
+      // Handle different response structures
+      const paymentData = response.data || response;
+      
       return {
         success: true,
-        data: response.data,
+        data: paymentData,
       };
     } catch (error) {
+      console.error('❌ Payment initialization error:', error);
       return {
         success: false,
         error: error.message,
