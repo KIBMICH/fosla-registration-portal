@@ -12,6 +12,7 @@ const Receipt = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [paymentStatus, setPaymentStatus] = useState(null); // 'PENDING' or 'PAID'
 
   useEffect(() => {
     const fetchReceipt = async () => {
@@ -30,27 +31,23 @@ const Receipt = () => {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          console.log(`🔄 Fetching receipt (attempt ${attempt + 1}/${maxRetries})...`);
+          console.log(`🔄 Verifying payment (attempt ${attempt + 1}/${maxRetries})...`);
           
-          // First, try to verify the payment (this might trigger backend verification)
-          let result = await paymentService.verifyReceipt(reference);
-          console.log('🔍 Verify result:', result);
+          // Use the correct verification endpoint with query parameter
+          const verifyResult = await paymentService.verifyPayment(reference);
+          console.log('🔍 Payment verification result:', verifyResult);
 
-          // If verify returns pending or no data, try the regular receipt endpoint
-          if (!result.success || !result.data || result.data.status === 'PENDING' || !result.data.valid) {
-            console.log('🔄 Trying receipt endpoint...');
-            result = await paymentService.getReceipt(reference);
-            console.log('📄 Receipt result:', result);
-          }
-
-          // Check if we got valid data
-          if (result.success && result.data) {
-            const receiptData = result.data;
-            console.log('✅ Receipt data fetched successfully:', receiptData);
-            console.log('📋 Full response structure:', JSON.stringify(receiptData, null, 2));
+          if (verifyResult.success && verifyResult.data) {
+            const paymentData = verifyResult.data;
+            console.log('� Payment data structure:', JSON.stringify(paymentData, null, 2));
+            
+            // Extract status
+            const status = paymentData.status || paymentData.paymentStatus || 'PENDING';
+            setPaymentStatus(status);
+            console.log('💳 Payment status:', status);
             
             // Check if payment is still pending
-            if (receiptData.status === 'PENDING' || receiptData.valid === false) {
+            if (status === 'PENDING') {
               console.warn(`⏳ Payment still pending (attempt ${attempt + 1}/${maxRetries})`);
               
               // If this is the last attempt, try localStorage fallback
@@ -59,7 +56,7 @@ const Receipt = () => {
                 const localData = localStorage.getItem(`registration_${reference}`);
                 if (localData) {
                   const storedData = JSON.parse(localData);
-                  console.log('💾 Found data in localStorage:', storedData);
+                  console.log('� Found data in localStorage:', storedData);
                   
                   setData({
                     institution: "FOSLA Academy",
@@ -72,7 +69,7 @@ const Receipt = () => {
                     position: storedData.positionOfPlay || 'N/A',
                     guardianName: storedData.guardianFullName || 'N/A',
                     guardianPhone: storedData.guardianPhoneNumber || 'N/A',
-                    amount: 'Paid', // We don't have amount in localStorage
+                    amount: paymentData.amount ? `₦${(paymentData.amount / 100).toLocaleString()}` : 'N/A',
                     reference: storedData.reference,
                     date: new Date().toLocaleString(),
                   });
@@ -80,7 +77,7 @@ const Receipt = () => {
                   return;
                 }
                 
-                setError('Payment verification is taking longer than expected. Please check back in a few minutes or contact support.');
+                setError('Payment is still pending verification. Please check back in a few minutes.');
                 setLoading(false);
                 return;
               }
@@ -90,19 +87,48 @@ const Receipt = () => {
               continue;
             }
             
-            // Handle different possible field name variations from backend
-            const firstName = receiptData.firstName || receiptData.first_name || receiptData.studentFirstName || '';
-            const surname = receiptData.surname || receiptData.last_name || receiptData.lastName || receiptData.studentSurname || '';
-            const sex = receiptData.sex || receiptData.gender || '';
-            const dob = receiptData.dateOfBirth || receiptData.date_of_birth || receiptData.dob || '';
-            const age = receiptData.age || '';
-            const stateOfOrigin = receiptData.stateOfOrigin || receiptData.state_of_origin || receiptData.state || '';
-            const position = receiptData.positionOfPlay || receiptData.position_of_play || receiptData.position || '';
-            const guardianName = receiptData.guardianFullName || receiptData.guardian_full_name || receiptData.guardianName || '';
-            const guardianPhone = receiptData.guardianPhoneNumber || receiptData.guardian_phone_number || receiptData.guardianPhone || '';
-            const amount = receiptData.amount || receiptData.amountPaid || receiptData.amount_paid || 0;
-            const ref = receiptData.reference || receiptData.paymentReference || receiptData.payment_reference || reference;
-            const paidAt = receiptData.paidAt || receiptData.paid_at || receiptData.paymentDate || receiptData.payment_date || new Date().toLocaleString();
+            // Payment is successful, extract data
+            // Handle different possible field name variations
+            const firstName = paymentData.firstName || paymentData.first_name || paymentData.studentFirstName || '';
+            const surname = paymentData.surname || paymentData.last_name || paymentData.lastName || paymentData.studentSurname || '';
+            const sex = paymentData.sex || paymentData.gender || '';
+            const dob = paymentData.dateOfBirth || paymentData.date_of_birth || paymentData.dob || '';
+            const age = paymentData.age || '';
+            const stateOfOrigin = paymentData.stateOfOrigin || paymentData.state_of_origin || paymentData.state || '';
+            const position = paymentData.positionOfPlay || paymentData.position_of_play || paymentData.position || '';
+            const guardianName = paymentData.guardianFullName || paymentData.guardian_full_name || paymentData.guardianName || '';
+            const guardianPhone = paymentData.guardianPhoneNumber || paymentData.guardian_phone_number || paymentData.guardianPhone || '';
+            const amount = paymentData.amount || paymentData.amountPaid || paymentData.amount_paid || 0;
+            const ref = paymentData.reference || reference;
+            const paidAt = paymentData.paidAt || paymentData.paid_at || paymentData.paymentDate || paymentData.payment_date || new Date().toLocaleString();
+            
+            // If we don't have registration data from backend, try localStorage
+            if (!firstName && !surname) {
+              console.log('🔍 No registration data in payment response, checking localStorage...');
+              const localData = localStorage.getItem(`registration_${reference}`);
+              if (localData) {
+                const storedData = JSON.parse(localData);
+                console.log('💾 Using data from localStorage:', storedData);
+                
+                setData({
+                  institution: "FOSLA Academy",
+                  event: "Scholarship Screening",
+                  studentName: `${storedData.firstName} ${storedData.surname}`,
+                  sex: storedData.sex || 'N/A',
+                  dob: storedData.dateOfBirth || 'N/A',
+                  age: storedData.age || 'N/A',
+                  stateOfOrigin: storedData.stateOfOrigin || 'N/A',
+                  position: storedData.positionOfPlay || 'N/A',
+                  guardianName: storedData.guardianFullName || 'N/A',
+                  guardianPhone: storedData.guardianPhoneNumber || 'N/A',
+                  amount: amount ? `₦${(amount / 100).toLocaleString()}` : 'N/A',
+                  reference: ref,
+                  date: paidAt,
+                });
+                setLoading(false);
+                return;
+              }
+            }
             
             setData({
               institution: "FOSLA Academy",
@@ -122,7 +148,7 @@ const Receipt = () => {
             setLoading(false);
             return; // Success, exit the retry loop
           } else {
-            console.warn(`⚠️ Attempt ${attempt + 1} failed:`, result.error);
+            console.warn(`⚠️ Attempt ${attempt + 1} failed:`, verifyResult.error);
             
             // If this is the last attempt, try localStorage fallback
             if (attempt === maxRetries - 1) {
@@ -143,15 +169,16 @@ const Receipt = () => {
                   position: storedData.positionOfPlay || 'N/A',
                   guardianName: storedData.guardianFullName || 'N/A',
                   guardianPhone: storedData.guardianPhoneNumber || 'N/A',
-                  amount: 'Paid', // We don't have amount in localStorage
+                  amount: 'Paid',
                   reference: storedData.reference,
                   date: new Date().toLocaleString(),
                 });
+                setPaymentStatus('PENDING');
                 setLoading(false);
                 return;
               }
               
-              setError(result.error || 'Failed to fetch receipt after multiple attempts. Your payment may still be processing.');
+              setError(verifyResult.error || 'Failed to verify payment after multiple attempts.');
               setLoading(false);
               return;
             }
@@ -181,15 +208,16 @@ const Receipt = () => {
                 position: storedData.positionOfPlay || 'N/A',
                 guardianName: storedData.guardianFullName || 'N/A',
                 guardianPhone: storedData.guardianPhoneNumber || 'N/A',
-                amount: 'Paid', // We don't have amount in localStorage
+                amount: 'Paid',
                 reference: storedData.reference,
                 date: new Date().toLocaleString(),
               });
+              setPaymentStatus('PENDING');
               setLoading(false);
               return;
             }
             
-            setError('Unable to load receipt. Your payment may still be processing. Please check back in a few minutes.');
+            setError('Unable to verify payment. Please check back in a few minutes.');
             setLoading(false);
             return;
           }
@@ -268,10 +296,20 @@ const Receipt = () => {
   return (
     <div className="receipt-page">
       <div className="receipt-card" ref={receiptRef}>
-        <h2 className="receipt-title">Payment Successful</h2>
+        <h2 className="receipt-title">
+          {paymentStatus === 'PAID' ? 'Payment Successful' : 'Payment Pending'}
+        </h2>
         <p className="receipt-subtitle">
-          Your scholarship screening registration has been completed successfully.
+          {paymentStatus === 'PAID' 
+            ? 'Your scholarship screening registration has been completed successfully.'
+            : 'Your payment is being verified. Please check back shortly.'}
         </p>
+
+        {paymentStatus && (
+          <div className={`payment-status-badge ${paymentStatus.toLowerCase()}`}>
+            Status: {paymentStatus}
+          </div>
+        )}
 
         <h3 className="section-title">Receipt Details</h3>
 

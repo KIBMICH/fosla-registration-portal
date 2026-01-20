@@ -17,6 +17,7 @@ export const API_ENDPOINTS = {
   EVENTS: '/events',
   REGISTER: '/events/register',
   INITIALIZE_PAYMENT: '/payments/initialize',
+  VERIFY_PAYMENT: '/payments/verify',
   RECEIPTS: '/receipts',
   VERIFY_RECEIPT: '/receipts/verify',
 

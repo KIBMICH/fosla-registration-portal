@@ -54,6 +54,24 @@ class PaymentService {
   }
 
   /**
+   * Verify payment status by reference
+   */
+  async verifyPayment(reference) {
+    try {
+      const response = await apiService.get(`${API_ENDPOINTS.VERIFY_PAYMENT}?reference=${reference}`);
+      return {
+        success: true,
+        data: response.data,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
+  /**
    * Verify receipt by reference
    */
   async verifyReceipt(reference) {
