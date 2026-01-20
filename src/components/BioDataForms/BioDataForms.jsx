@@ -70,29 +70,54 @@ function BiodataForms() {
         return;
       }
 
-      const { registrationId, reference } = registrationResult.data;
+      // Check what data we got back
+      const responseData = registrationResult.data;
+      console.log('📦 Registration response data:', responseData);
+
+      // Try to extract the necessary fields
+      const registrationId = responseData.registrationId || responseData._id || responseData.id;
+      const reference = responseData.reference;
+
+      if (!registrationId || !reference) {
+        console.error('❌ Missing required fields:', { registrationId, reference });
+        setError('Registration succeeded but missing payment information. Please contact support.');
+        setLoading(false);
+        return;
+      }
+
       console.log('🎫 Got registration ID:', registrationId, 'Reference:', reference);
 
       // Initialize payment
-      console.log('💳 Initializing payment...');
+      console.log('💳 Initializing payment with:', { registrationId, reference });
       const paymentResult = await paymentService.initializePayment({
         registrationId,
         reference,
       });
       console.log('💰 Payment result:', paymentResult);
 
-      if (paymentResult.success && paymentResult.data?.authorization_url) {
-        console.log('🚀 Redirecting to Paystack:', paymentResult.data.authorization_url);
-        // Redirect to Paystack payment page
-        window.location.href = paymentResult.data.authorization_url;
+      if (!paymentResult.success) {
+        console.error('❌ Payment initialization failed:', paymentResult.error);
+        setError(`Payment initialization failed: ${paymentResult.error}`);
+        setLoading(false);
+        return;
+      }
+
+      // Check for authorization URL
+      const authUrl = paymentResult.data?.authorization_url || 
+                      paymentResult.data?.authorizationUrl ||
+                      paymentResult.data?.data?.authorization_url;
+
+      if (authUrl) {
+        console.log('🚀 Redirecting to Paystack:', authUrl);
+        window.location.href = authUrl;
       } else {
-        console.warn('⚠️ No authorization_url received, showing error');
-        setError('Payment initialization failed. Please try again or contact support.');
+        console.error('⚠️ No authorization_url in response:', paymentResult.data);
+        setError('Payment initialization failed. No payment URL received. Please try again or contact support.');
         setLoading(false);
       }
     } catch (err) {
       console.error('❌ Error during registration/payment:', err);
-      setError('An unexpected error occurred. Please try again.');
+      setError(`An unexpected error occurred: ${err.message || 'Please try again.'}`);
       setLoading(false);
     }
   };
