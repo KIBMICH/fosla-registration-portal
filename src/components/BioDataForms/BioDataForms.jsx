@@ -136,7 +136,7 @@ function BiodataForms() {
         </div>
 
         <div className="header-text">
-          <h1>FOSLA ACADEMY KARSHI</h1>
+          <h1>FOSLA ACADEMY KARSHI, ABUJA</h1>
           <h2>Scholarship Registration</h2>
         </div>
       </header>
