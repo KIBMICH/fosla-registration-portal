@@ -28,8 +28,11 @@ function AdminRecords() {
         limit: pagination.limit,
       });
 
+      console.log('📊 Admin registrations response:', result);
+
       if (result.success && result.data) {
         const registrations = result.data.registrations || result.data.data || [];
+        console.log('📋 Registrations data:', registrations);
         setRecords(registrations);
         setFilteredRecords(registrations);
         setPagination(prev => ({
@@ -131,8 +134,8 @@ function AdminRecords() {
                     <td>{record.guardianPhoneNumber}</td>
                     <td>{record.email}</td>
                     <td>
-                      <span className={`status-badge ${record.status?.toLowerCase() || 'pending'}`}>
-                        {record.status || 'PENDING'}
+                      <span className={`status-badge ${(record.paymentStatus || record.status || 'pending').toLowerCase()}`}>
+                        {record.paymentStatus || record.status || 'PENDING'}
                       </span>
                     </td>
                   </tr>

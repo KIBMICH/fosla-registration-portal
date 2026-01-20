@@ -119,9 +119,12 @@
   border-radius: 20px;
   font-size: 12px;
   font-weight: 600;
+  text-transform: uppercase;
 }
 
-.status-badge.paid {
+.status-badge.paid,
+.status-badge.success,
+.status-badge.successful {
   background-color: #d1fae5;
   color: #065f46;
 }
@@ -129,6 +132,16 @@
 .status-badge.pending {
   background-color: #fef3c7;
   color: #92400e;
+}
+
+.status-badge.failed {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.status-badge.abandoned {
+  background-color: #f3f4f6;
+  color: #374151;
 }
 
 .no-records {
