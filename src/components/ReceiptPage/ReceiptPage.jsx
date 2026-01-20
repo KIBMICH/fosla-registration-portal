@@ -173,10 +173,19 @@ const Receipt = () => {
               <small>Please save this reference number for your records.</small>
             </div>
           )}
+          <p style={{ marginTop: '1rem', fontSize: '0.9em', color: '#666' }}>
+            Your payment was successful, but the receipt is still being processed. 
+            Please wait a moment and try refreshing, or contact support with your reference number.
+          </p>
         </div>
-        <button onClick={() => navigate("/")} className="btn primary">
-          Back Home
-        </button>
+        <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
+          <button onClick={() => window.location.reload()} className="btn primary">
+            Retry Loading Receipt
+          </button>
+          <button onClick={() => navigate("/")} className="btn outline">
+            Back Home
+          </button>
+        </div>
       </div>
     );
   }
