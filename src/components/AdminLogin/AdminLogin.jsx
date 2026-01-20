@@ -10,6 +10,7 @@ function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [wakingUp, setWakingUp] = useState(false);
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
@@ -26,6 +27,11 @@ function AdminLogin() {
     }
 
     setLoading(true);
+    
+    // Show "waking up" message after 3 seconds
+    const wakingUpTimer = setTimeout(() => {
+      setWakingUp(true);
+    }, 3000);
 
     try {
       const result = await adminService.login({
@@ -33,15 +39,25 @@ function AdminLogin() {
         password: sanitizedPassword,
       });
 
+      clearTimeout(wakingUpTimer);
+
       if (result.success) {
         navigate("/admin/dashboard");
       } else {
         setError(result.error || VALIDATION_MESSAGES.INVALID_CREDENTIALS);
       }
     } catch (err) {
-      setError("An unexpected error occurred. Please try again.");
+      clearTimeout(wakingUpTimer);
+      
+      // Check if it's a timeout error
+      if (err.message && err.message.includes('timeout')) {
+        setError("Server is taking longer than expected. Please try again in a moment.");
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setLoading(false);
+      setWakingUp(false);
     }
   };
 
@@ -90,6 +106,12 @@ function AdminLogin() {
           {error && (
             <div className="error-message" role="alert">
               {error}
+            </div>
+          )}
+
+          {wakingUp && !error && (
+            <div className="info-message" role="status">
+              Logging in... This may take a moment.
             </div>
           )}
 
