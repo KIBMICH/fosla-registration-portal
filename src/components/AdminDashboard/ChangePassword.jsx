@@ -1,0 +1,128 @@
+import { useState } from "react";
+import { VALIDATION_MESSAGES } from "../../constants/admin";
+import "./ChangePassword.css";
+import { validatePassword, validatePasswordMatch, validatePasswordDifference } from "../../utils/validation";
+
+function ChangePassword() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleChangePassword = (e) => {
+    e.preventDefault();
+    setMessage(null);
+
+    // Validation
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setMessage({ type: "error", text: VALIDATION_MESSAGES.REQUIRED_FIELDS });
+      return;
+    }
+
+    if (!validatePassword(newPassword)) {
+      setMessage({ type: "error", text: VALIDATION_MESSAGES.PASSWORD_TOO_SHORT });
+      return;
+    }
+
+    if (!validatePasswordMatch(newPassword, confirmPassword)) {
+      setMessage({ type: "error", text: VALIDATION_MESSAGES.PASSWORDS_MISMATCH });
+      return;
+    }
+
+    if (!validatePasswordDifference(currentPassword, newPassword)) {
+      setMessage({ type: "error", text: VALIDATION_MESSAGES.SAME_PASSWORD });
+      return;
+    }
+
+    setLoading(true);
+
+    // Simulate API call - in production, send to backend
+    setTimeout(() => {
+      // Mock verification - in production, verify with backend
+      if (currentPassword === "admin123") {
+        setMessage({ type: "success", text: VALIDATION_MESSAGES.PASSWORD_CHANGED });
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+      } else {
+        setMessage({ type: "error", text: VALIDATION_MESSAGES.INCORRECT_PASSWORD });
+      }
+      setLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="password-container">
+      <div className="password-card">
+        <h2>Change Password</h2>
+        <p>Update your admin account password</p>
+
+        <form onSubmit={handleChangePassword}>
+          <div className="form-group">
+            <label htmlFor="currentPassword">Current Password</label>
+            <input
+              id="currentPassword"
+              type="password"
+              placeholder="Enter current password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              disabled={loading}
+              required
+              aria-label="Current password"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="newPassword">New Password</label>
+            <input
+              id="newPassword"
+              type="password"
+              placeholder="Enter new password (min 6 characters)"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              disabled={loading}
+              required
+              aria-label="New password"
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm New Password</label>
+            <input
+              id="confirmPassword"
+              type="password"
+              placeholder="Confirm new password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={loading}
+              required
+              aria-label="Confirm new password"
+            />
+          </div>
+
+          {message && (
+            <div className={`message ${message.type}`} role="alert">
+              {message.type === "success" ? "✓" : "✗"} {message.text}
+            </div>
+          )}
+
+          <button type="submit" className="change-btn" disabled={loading}>
+            {loading ? "Updating..." : "Change Password"}
+          </button>
+        </form>
+
+        <div className="password-info">
+          <h4>Password Requirements:</h4>
+          <ul>
+            <li>Minimum 6 characters</li>
+            <li>Must be different from current password</li>
+            <li>Passwords must match</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default ChangePassword;
