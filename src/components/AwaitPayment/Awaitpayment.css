@@ -1,0 +1,58 @@
+.await-payment-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f7fb;
+  padding: 20px;
+}
+
+.await-payment-card {
+  background: #ffffff;
+  padding: 40px 30px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+.await-payment-card h2 {
+  margin-top: 20px;
+  font-size: 1.4rem;
+  color: #222;
+}
+
+.await-payment-card p {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* Spinner */
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #e0e0e0;
+  border-top: 6px solid #0a3cff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile tweaks */
+@media (max-width: 480px) {
+  .await-payment-card {
+    padding: 30px 20px;
+  }
+
+  .await-payment-card h2 {
+    font-size: 1.2rem;
+  }
+}
