@@ -20,11 +20,11 @@ class PaymentService {
       console.log('💳 Payment API Response:', response);
       
       // Handle different response structures
-      const paymentData = response.data || response;
+      const responseData = response.data || response;
       
       return {
         success: true,
-        data: paymentData,
+        data: responseData,
       };
     } catch (error) {
       console.error('❌ Payment initialization error:', error);

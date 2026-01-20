@@ -40,7 +40,7 @@ const cors = require('cors');
 
 const allowedOrigins = [
   'http://localhost:3001',
-  'https://your-project.vercel.app',  // Add your Vercel URL
+   // Add your Vercel URL
   'https://fosla-registration-portal.vercel.app'  // Or custom domain
 ];
 
