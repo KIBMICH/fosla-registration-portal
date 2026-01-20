@@ -236,7 +236,7 @@ function BiodataForms() {
         </div>
 
         <div className="form-group">
-          <label htmlFor="email">Email Address</label>
+          <label htmlFor="email">Email Address(Optional)</label>
           <input id="email" name="email" type="email" placeholder="Enter Email Address" required />
         </div>
 
