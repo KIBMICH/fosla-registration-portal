@@ -24,33 +24,69 @@ const Receipt = () => {
         return;
       }
 
-      try {
-        const result = await paymentService.getReceipt(reference);
+      // Retry logic: Try up to 5 times with increasing delays
+      const maxRetries = 5;
+      const retryDelays = [1000, 2000, 3000, 4000, 5000]; // milliseconds
 
-        if (result.success && result.data) {
-          const receiptData = result.data;
-          setData({
-            institution: "FOSLA Academy",
-            event: "Scholarship Screening",
-            studentName: `${receiptData.firstName} ${receiptData.surname}`,
-            sex: receiptData.sex,
-            dob: receiptData.dateOfBirth,
-            age: receiptData.age,
-            stateOfOrigin: receiptData.stateOfOrigin,
-            position: receiptData.positionOfPlay,
-            guardianName: receiptData.guardianFullName,
-            guardianPhone: receiptData.guardianPhoneNumber,
-            amount: receiptData.amount ? `₦${(receiptData.amount / 100).toLocaleString()}` : 'N/A',
-            reference: receiptData.reference,
-            date: receiptData.paidAt || new Date().toLocaleString(),
-          });
-        } else {
-          setError(result.error || 'Failed to fetch receipt');
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        try {
+          console.log(`🔄 Fetching receipt (attempt ${attempt + 1}/${maxRetries})...`);
+          
+          // Try the regular receipt endpoint first
+          let result = await paymentService.getReceipt(reference);
+
+          // If that fails, try the verify endpoint as fallback
+          if (!result.success || !result.data) {
+            console.log('🔄 Trying verify endpoint as fallback...');
+            result = await paymentService.verifyReceipt(reference);
+          }
+
+          if (result.success && result.data) {
+            const receiptData = result.data;
+            console.log('✅ Receipt data fetched successfully:', receiptData);
+            setData({
+              institution: "FOSLA Academy",
+              event: "Scholarship Screening",
+              studentName: `${receiptData.firstName} ${receiptData.surname}`,
+              sex: receiptData.sex,
+              dob: receiptData.dateOfBirth,
+              age: receiptData.age,
+              stateOfOrigin: receiptData.stateOfOrigin,
+              position: receiptData.positionOfPlay,
+              guardianName: receiptData.guardianFullName,
+              guardianPhone: receiptData.guardianPhoneNumber,
+              amount: receiptData.amount ? `₦${(receiptData.amount / 100).toLocaleString()}` : 'N/A',
+              reference: receiptData.reference,
+              date: receiptData.paidAt || new Date().toLocaleString(),
+            });
+            setLoading(false);
+            return; // Success, exit the retry loop
+          } else {
+            console.warn(`⚠️ Attempt ${attempt + 1} failed:`, result.error);
+            
+            // If this is the last attempt, show error
+            if (attempt === maxRetries - 1) {
+              setError(result.error || 'Failed to fetch receipt after multiple attempts');
+              setLoading(false);
+              return;
+            }
+            
+            // Wait before retrying
+            await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+          }
+        } catch (err) {
+          console.error(`❌ Attempt ${attempt + 1} error:`, err);
+          
+          // If this is the last attempt, show error
+          if (attempt === maxRetries - 1) {
+            setError('Unable to load receipt. Please contact support with your payment reference.');
+            setLoading(false);
+            return;
+          }
+          
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
         }
-      } catch (err) {
-        setError('An unexpected error occurred');
-      } finally {
-        setLoading(false);
       }
     };
 
@@ -83,9 +119,20 @@ const Receipt = () => {
   }
 
   if (error || !data) {
+    const reference = searchParams.get('reference') || state?.reference;
     return (
       <div className="receipt-page">
-        <div className="error-message">{error || 'Receipt not found'}</div>
+        <div className="error-message">
+          <h3>Unable to Load Receipt</h3>
+          <p>{error || 'Receipt not found'}</p>
+          {reference && (
+            <div style={{ marginTop: '1rem', padding: '1rem', background: '#f5f5f5', borderRadius: '4px' }}>
+              <strong>Payment Reference:</strong> {reference}
+              <br />
+              <small>Please save this reference number for your records.</small>
+            </div>
+          )}
+        </div>
         <button onClick={() => navigate("/")} className="btn primary">
           Back Home
         </button>
