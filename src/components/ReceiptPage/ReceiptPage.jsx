@@ -44,20 +44,36 @@ const Receipt = () => {
           if (result.success && result.data) {
             const receiptData = result.data;
             console.log('✅ Receipt data fetched successfully:', receiptData);
+            console.log('📋 Full response structure:', JSON.stringify(receiptData, null, 2));
+            
+            // Handle different possible field name variations from backend
+            const firstName = receiptData.firstName || receiptData.first_name || receiptData.studentFirstName || '';
+            const surname = receiptData.surname || receiptData.last_name || receiptData.lastName || receiptData.studentSurname || '';
+            const sex = receiptData.sex || receiptData.gender || '';
+            const dob = receiptData.dateOfBirth || receiptData.date_of_birth || receiptData.dob || '';
+            const age = receiptData.age || '';
+            const stateOfOrigin = receiptData.stateOfOrigin || receiptData.state_of_origin || receiptData.state || '';
+            const position = receiptData.positionOfPlay || receiptData.position_of_play || receiptData.position || '';
+            const guardianName = receiptData.guardianFullName || receiptData.guardian_full_name || receiptData.guardianName || '';
+            const guardianPhone = receiptData.guardianPhoneNumber || receiptData.guardian_phone_number || receiptData.guardianPhone || '';
+            const amount = receiptData.amount || receiptData.amountPaid || receiptData.amount_paid || 0;
+            const reference = receiptData.reference || receiptData.paymentReference || receiptData.payment_reference || '';
+            const paidAt = receiptData.paidAt || receiptData.paid_at || receiptData.paymentDate || receiptData.payment_date || new Date().toLocaleString();
+            
             setData({
               institution: "FOSLA Academy",
               event: "Scholarship Screening",
-              studentName: `${receiptData.firstName} ${receiptData.surname}`,
-              sex: receiptData.sex,
-              dob: receiptData.dateOfBirth,
-              age: receiptData.age,
-              stateOfOrigin: receiptData.stateOfOrigin,
-              position: receiptData.positionOfPlay,
-              guardianName: receiptData.guardianFullName,
-              guardianPhone: receiptData.guardianPhoneNumber,
-              amount: receiptData.amount ? `₦${(receiptData.amount / 100).toLocaleString()}` : 'N/A',
-              reference: receiptData.reference,
-              date: receiptData.paidAt || new Date().toLocaleString(),
+              studentName: `${firstName} ${surname}`.trim() || 'N/A',
+              sex: sex || 'N/A',
+              dob: dob || 'N/A',
+              age: age || 'N/A',
+              stateOfOrigin: stateOfOrigin || 'N/A',
+              position: position || 'N/A',
+              guardianName: guardianName || 'N/A',
+              guardianPhone: guardianPhone || 'N/A',
+              amount: amount ? `₦${(amount / 100).toLocaleString()}` : 'N/A',
+              reference: reference || 'N/A',
+              date: paidAt,
             });
             setLoading(false);
             return; // Success, exit the retry loop
