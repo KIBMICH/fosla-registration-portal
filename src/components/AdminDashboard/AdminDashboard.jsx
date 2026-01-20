@@ -37,7 +37,7 @@ function AdminDashboard() {
       <header className="admin-header">
         <div className="header-left">
           <img
-            src="/Public/fosla-logo.png.jpg"
+            src="/fosla-logo.png.jpg"
             alt="FOSLA Academy Logo"
             className="admin-header-logo"
           />

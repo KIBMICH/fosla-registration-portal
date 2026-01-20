@@ -47,7 +47,7 @@ function AdminLogin() {
       <div className="login-card">
         <div className="login-header">
           <img
-            src="/Public/fosla-logo.png.jpg"
+            src="/fosla-logo.png.jpg"
             alt="FOSLA Academy Logo"
             className="login-logo"
           />

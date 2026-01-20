@@ -29,7 +29,7 @@ function BiodataForms() {
       <header className="app-header">
         <div className="header-left">
           <img
-            src="/Public/fosla-logo.png.jpg"
+            src="/fosla-logo.png.jpg"
             alt="Foster Academy Logo"
             className="header-logo"
           />
