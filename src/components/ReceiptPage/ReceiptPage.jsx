@@ -317,6 +317,14 @@ const Receipt = () => {
   return (
     <div className="receipt-page">
       <div className="receipt-card" ref={receiptRef}>
+        <div className="receipt-logo-container">
+          <img 
+            src="/fosla-logo.png.jpg" 
+            alt="FOSLA Academy Logo" 
+            className="receipt-logo"
+          />
+        </div>
+        
         <h2 className="receipt-title">
           {paymentStatus === 'PAID' ? 'Payment Successful' : 
            paymentStatus === 'PENDING' ? 'Payment Pending' :

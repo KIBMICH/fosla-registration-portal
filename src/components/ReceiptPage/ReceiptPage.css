@@ -17,6 +17,19 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
+/* Logo */
+.receipt-logo-container {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.receipt-logo {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
 /* Titles */
 .receipt-title {
   text-align: center;
