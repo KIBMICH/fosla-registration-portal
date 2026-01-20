@@ -11,6 +11,7 @@ function App() {
       <Routes>
         <Route path="/" element={<BioDataForms />} />
         <Route path="/await-payment" element={<AwaitPayment />} />
+        <Route path="/payment/verify" element={<AwaitPayment />} />
         <Route path="/receipt" element={<Receipt />} />
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

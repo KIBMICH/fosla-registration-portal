@@ -12,15 +12,23 @@ const AwaitPayment = () => {
   useEffect(() => {
     const handlePaymentCallback = async () => {
       // Check if this is a Paystack callback
-      const reference = searchParams.get('reference');
+      // Paystack can send either 'reference' or 'trxref'
+      const reference = searchParams.get('reference') || searchParams.get('trxref');
       const status = searchParams.get('status');
+
+      console.log('🔍 Payment callback params:', { reference, status, allParams: Object.fromEntries(searchParams) });
 
       if (reference) {
         // This is a Paystack callback
-        if (status === 'success') {
+        console.log('✅ Paystack callback detected with reference:', reference);
+        
+        // Check status if provided, otherwise assume success
+        if (!status || status === 'success' || status === 'successful') {
+          console.log('🎉 Payment successful, redirecting to receipt');
           // Verify payment and navigate to receipt
           navigate(`/receipt?reference=${reference}`);
         } else {
+          console.warn('⚠️ Payment status:', status);
           // Payment failed or cancelled
           setError('Payment was not completed. Please try again.');
           setTimeout(() => {
@@ -28,15 +36,18 @@ const AwaitPayment = () => {
           }, 3000);
         }
       } else {
+        console.log('ℹ️ No reference in URL, checking location state');
         // This is initial payment loading (from registration)
         const stateData = location.state;
         
         if (stateData?.reference) {
+          console.log('📦 Found reference in state:', stateData.reference);
           // We have a reference from registration, simulate loading
           setTimeout(() => {
             navigate(`/receipt?reference=${stateData.reference}`);
           }, 3000);
         } else {
+          console.warn('⚠️ No reference found, redirecting to home');
           // No reference, redirect to home
           setTimeout(() => {
             navigate('/');
