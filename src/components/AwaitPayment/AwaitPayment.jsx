@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./Awaitpayment.css";
+import "./AwaitPayment.css";
 
 const AwaitPayment = () => {
   const navigate = useNavigate();
