@@ -16,6 +16,8 @@ class AdminService {
       
       if (response.data?.token) {
         apiService.setAuthToken(response.data.token);
+        // Store admin email for display
+        localStorage.setItem('adminEmail', credentials.email);
       }
       
       return {
@@ -192,6 +194,7 @@ class AdminService {
    */
   logout() {
     apiService.setAuthToken(null);
+    localStorage.removeItem('adminEmail');
   }
 
   /**

@@ -29,7 +29,7 @@ function AdminDashboard() {
     setMenuOpen(false);
   };
 
-  const adminEmail = localStorage.getItem('authToken') || 'admin@fosla.com';
+  const adminEmail = localStorage.getItem('adminEmail') || 'Admin';
 
   return (
     <div className="admin-dashboard">
