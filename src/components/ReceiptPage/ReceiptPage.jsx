@@ -1,29 +1,61 @@
-import React, { useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useRef, useEffect, useState } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import html2pdf from "html2pdf.js";
+import { paymentService } from "../../services";
 import "./ReceiptPage.css";
 
 const Receipt = () => {
   const receiptRef = useRef(null);
   const navigate = useNavigate();
   const { state } = useLocation();
+  const [searchParams] = useSearchParams();
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Mock fallback data (in case user refreshes page)
-  const data = state || {
-    institution: "FOSLA Academy",
-    event: "Scholarship Screening",
-    studentName: "Aminu Musa Bello",
-    sex: "Male",
-    dob: "05/15/2010",
-    age: 14,
-    stateOfOrigin: "Plateau",
-    position: "Midfielder",
-    guardianName: "Fatima Bello",
-    guardianPhone: "+234 801 234 5678",
-    amount: "₦5,000.00",
-    reference: "FSL7284S789QKEDBEF",
-    date: "2024-07-25 14:30:00",
-  };
+  useEffect(() => {
+    const fetchReceipt = async () => {
+      // Get reference from URL params or state
+      const reference = searchParams.get('reference') || state?.reference;
+
+      if (!reference) {
+        setError('No payment reference found');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const result = await paymentService.getReceipt(reference);
+
+        if (result.success && result.data) {
+          const receiptData = result.data;
+          setData({
+            institution: "FOSLA Academy",
+            event: "Scholarship Screening",
+            studentName: `${receiptData.firstName} ${receiptData.surname}`,
+            sex: receiptData.sex,
+            dob: receiptData.dateOfBirth,
+            age: receiptData.age,
+            stateOfOrigin: receiptData.stateOfOrigin,
+            position: receiptData.positionOfPlay,
+            guardianName: receiptData.guardianFullName,
+            guardianPhone: receiptData.guardianPhoneNumber,
+            amount: receiptData.amount ? `₦${(receiptData.amount / 100).toLocaleString()}` : 'N/A',
+            reference: receiptData.reference,
+            date: receiptData.paidAt || new Date().toLocaleString(),
+          });
+        } else {
+          setError(result.error || 'Failed to fetch receipt');
+        }
+      } catch (err) {
+        setError('An unexpected error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReceipt();
+  }, [searchParams, state]);
 
   const handlePrint = () => {
     window.print();
@@ -33,7 +65,7 @@ const Receipt = () => {
     html2pdf()
       .set({
         margin: 0.5,
-        filename: "payment-receipt.pdf",
+        filename: `receipt-${data?.reference || 'payment'}.pdf`,
         image: { type: "jpeg", quality: 0.98 },
         html2canvas: { scale: 2 },
         jsPDF: { unit: "in", format: "a4", orientation: "portrait" },
@@ -41,6 +73,25 @@ const Receipt = () => {
       .from(receiptRef.current)
       .save();
   };
+
+  if (loading) {
+    return (
+      <div className="receipt-page">
+        <div className="loading">Loading receipt...</div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="receipt-page">
+        <div className="error-message">{error || 'Receipt not found'}</div>
+        <button onClick={() => navigate("/")} className="btn primary">
+          Back Home
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="receipt-page">

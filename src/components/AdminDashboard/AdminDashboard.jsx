@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FileText, CheckCircle, Lock, Menu, X, LogOut } from "lucide-react";
 import { ADMIN_TABS } from "../../constants/admin";
-import { isAuthenticated, getAuthEmail, clearAuth } from "../../utils/auth";
+import { adminService } from "../../services";
 import "./AdminDashboard.css";
 import AdminRecords from "./AdminRecords";
 import ValidateReceipt from "./ValidateReceipt";
@@ -14,13 +14,13 @@ function AdminDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!adminService.isAuthenticated()) {
       navigate("/admin/login");
     }
   }, [navigate]);
 
   const handleLogout = () => {
-    clearAuth();
+    adminService.logout();
     navigate("/admin/login");
   };
 
@@ -29,7 +29,7 @@ function AdminDashboard() {
     setMenuOpen(false);
   };
 
-  const adminEmail = getAuthEmail();
+  const adminEmail = localStorage.getItem('authToken') || 'admin@fosla.com';
 
   return (
     <div className="admin-dashboard">

@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ADMIN_CREDENTIALS, VALIDATION_MESSAGES } from "../../constants/admin";
+import { VALIDATION_MESSAGES } from "../../constants/admin";
 import { validateEmail, sanitizeInput } from "../../utils/validation";
-import { setAuthToken } from "../../utils/auth";
+import { adminService } from "../../services";
 import "./AdminLogin.css";
 
 function AdminLogin() {
@@ -12,7 +12,7 @@ function AdminLogin() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -27,19 +27,22 @@ function AdminLogin() {
 
     setLoading(true);
 
-    // Simulate API call - in production, send to backend
-    setTimeout(() => {
-      if (
-        sanitizedEmail === ADMIN_CREDENTIALS.email &&
-        sanitizedPassword === ADMIN_CREDENTIALS.password
-      ) {
-        setAuthToken(sanitizedEmail);
+    try {
+      const result = await adminService.login({
+        email: sanitizedEmail,
+        password: sanitizedPassword,
+      });
+
+      if (result.success) {
         navigate("/admin/dashboard");
       } else {
-        setError(VALIDATION_MESSAGES.INVALID_CREDENTIALS);
+        setError(result.error || VALIDATION_MESSAGES.INVALID_CREDENTIALS);
       }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
   return (

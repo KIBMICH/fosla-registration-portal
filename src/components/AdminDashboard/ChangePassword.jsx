@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { VALIDATION_MESSAGES } from "../../constants/admin";
+import { adminService } from "../../services";
 import "./ChangePassword.css";
 import { validatePassword, validatePasswordMatch, validatePasswordDifference } from "../../utils/validation";
 
@@ -10,7 +11,7 @@ function ChangePassword() {
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleChangePassword = (e) => {
+  const handleChangePassword = async (e) => {
     e.preventDefault();
     setMessage(null);
 
@@ -37,19 +38,25 @@ function ChangePassword() {
 
     setLoading(true);
 
-    // Simulate API call - in production, send to backend
-    setTimeout(() => {
-      // Mock verification - in production, verify with backend
-      if (currentPassword === "admin123") {
+    try {
+      const result = await adminService.changePassword({
+        currentPassword,
+        newPassword,
+      });
+
+      if (result.success) {
         setMessage({ type: "success", text: VALIDATION_MESSAGES.PASSWORD_CHANGED });
         setCurrentPassword("");
         setNewPassword("");
         setConfirmPassword("");
       } else {
-        setMessage({ type: "error", text: VALIDATION_MESSAGES.INCORRECT_PASSWORD });
+        setMessage({ type: "error", text: result.error || VALIDATION_MESSAGES.INCORRECT_PASSWORD });
       }
+    } catch (err) {
+      setMessage({ type: "error", text: "An unexpected error occurred. Please try again." });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

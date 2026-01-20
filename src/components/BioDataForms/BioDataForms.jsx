@@ -1,25 +1,74 @@
 import { useNavigate } from "react-router-dom";
-import  { useRef } from "react";
+import { useState, useRef } from "react";
+import { eventService, paymentService } from "../../services";
 import "./BioDataForms.css"
 
-
-
 function BiodataForms() {
+  const navigate = useNavigate();
+  const formRef = useRef(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
- const navigate = useNavigate();
-  const formRef = useRef(null); // ← Create a ref for the form
+  const handleProceed = async (e) => {
+    e.preventDefault();
+    setError(null);
 
-  const handleProceed = () => {
-    // -------------------------------
-    // FORM VALIDATION
-    // Uncomment the next lines to enforce required fields
-    // if (formRef.current && !formRef.current.checkValidity()) {
-    //   formRef.current.reportValidity();
-    //   return; // stops navigation
-    // }
-    // -------------------------------
+    // Form validation
+    if (formRef.current && !formRef.current.checkValidity()) {
+      formRef.current.reportValidity();
+      return;
+    }
 
-    navigate("/await-payment"); // goes to spinner page
+    setLoading(true);
+
+    try {
+      // Collect form data
+      const formData = new FormData(formRef.current);
+      const registrationData = {
+        firstName: formData.get('firstName'),
+        surname: formData.get('surname'),
+        sex: formData.get('sex'),
+        dateOfBirth: formData.get('dob'),
+        age: parseInt(formData.get('age')),
+        stateOfResidence: formData.get('stateResidence'),
+        stateOfOrigin: formData.get('stateOrigin'),
+        positionOfPlay: formData.get('position'),
+        guardianFullName: formData.get('guardianName'),
+        guardianPhoneNumber: formData.get('guardianPhone'),
+        email: formData.get('email'),
+      };
+
+      // Register for event
+      const registrationResult = await eventService.registerForEvent(registrationData);
+
+      if (!registrationResult.success) {
+        setError(registrationResult.error || 'Registration failed');
+        setLoading(false);
+        return;
+      }
+
+      // Initialize payment
+      const paymentResult = await paymentService.initializePayment({
+        registrationId: registrationResult.data.registrationId,
+        reference: registrationResult.data.reference,
+      });
+
+      if (paymentResult.success && paymentResult.data?.authorization_url) {
+        // Redirect to Paystack payment page
+        window.location.href = paymentResult.data.authorization_url;
+      } else {
+        // Fallback to await payment page
+        navigate("/await-payment", {
+          state: {
+            registrationId: registrationResult.data.registrationId,
+            reference: registrationResult.data.reference,
+          }
+        });
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+      setLoading(false);
+    }
   };
 
 
@@ -52,17 +101,23 @@ function BiodataForms() {
             </p>
           </div>
 
-      <form className="registration-form" ref={formRef} onSubmit={(e) => { e.preventDefault(); handleProceed(); }}>
+      <form className="registration-form" ref={formRef} onSubmit={handleProceed}>
         <h3>Applicant Details</h3>
+
+        {error && (
+          <div className="error-message" role="alert">
+            {error}
+          </div>
+        )}
 
         <div className="form-group">
           <label htmlFor="firstName">First Name</label>
-          <input id="firstName" type="text" placeholder="Enter First Name" required />
+          <input id="firstName" name="firstName" type="text" placeholder="Enter First Name" required />
         </div>
 
         <div className="form-group">
           <label htmlFor="surname">Surname</label>
-          <input id="surname" type="text" placeholder="Enter Surname" required />
+          <input id="surname" name="surname" type="text" placeholder="Enter Surname" required />
         </div>
 
         <div className="form-group">
@@ -79,41 +134,46 @@ function BiodataForms() {
 
         <div className="form-group">
           <label htmlFor="dob">Date of Birth</label>
-          <input id="dob" type="text" placeholder="Enter Date of Birth (MM/DD/YYYY)" required />
+          <input id="dob" name="dob" type="text" placeholder="Enter Date of Birth (MM/DD/YYYY)" required />
         </div>
 
         <div className="form-group">
           <label htmlFor="age">Age</label>
-          <input id="age" type="text" placeholder="Enter Age" required />
+          <input id="age" name="age" type="number" placeholder="Enter Age" required />
         </div>
 
         <div className="form-group">
           <label htmlFor="stateResidence">State of Residence</label>
-          <input id="stateResidence" type="text" placeholder="Enter State of Residence" required />
+          <input id="stateResidence" name="stateResidence" type="text" placeholder="Enter State of Residence" required />
         </div>
 
         <div className="form-group">
           <label htmlFor="stateOrigin">State of Origin</label>
-          <input id="stateOrigin" type="text" placeholder="Enter State of Origin" required />
+          <input id="stateOrigin" name="stateOrigin" type="text" placeholder="Enter State of Origin" required />
         </div>
 
         <div className="form-group">
           <label htmlFor="position">Position of Play</label>
-          <input id="position" type="text" placeholder="Enter Position of Play" required />
+          <input id="position" name="position" type="text" placeholder="Enter Position of Play" required />
         </div>
 
         <div className="form-group">
           <label htmlFor="guardianName">Guardian's Full Name</label>
-          <input id="guardianName" type="text" placeholder="Enter Guardian's Full Name" required />
+          <input id="guardianName" name="guardianName" type="text" placeholder="Enter Guardian's Full Name" required />
         </div>
 
         <div className="form-group">
           <label htmlFor="guardianPhone">Guardian's Phone Number</label>
-          <input id="guardianPhone" type="tel" placeholder="Enter Guardian's Phone Number" required />
+          <input id="guardianPhone" name="guardianPhone" type="tel" placeholder="Enter Guardian's Phone Number" required />
         </div>
 
-        <button type="submit" className="submit-btn">
-          Proceed to Payment
+        <div className="form-group">
+          <label htmlFor="email">Email Address</label>
+          <input id="email" name="email" type="email" placeholder="Enter Email Address" required />
+        </div>
+
+        <button type="submit" className="submit-btn" disabled={loading}>
+          {loading ? 'Processing...' : 'Proceed to Payment'}
         </button>
       </form>
         </div>

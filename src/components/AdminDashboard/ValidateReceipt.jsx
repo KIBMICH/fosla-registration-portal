@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { paymentService } from "../../services";
 import "./ValidateReceipt.css";
 
 function ValidateReceipt() {
@@ -6,30 +7,37 @@ function ValidateReceipt() {
   const [validationResult, setValidationResult] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleValidate = (e) => {
+  const handleValidate = async (e) => {
     e.preventDefault();
     setLoading(true);
+    setValidationResult(null);
 
-    // Simulate API call
-    setTimeout(() => {
-      // Mock validation - in production, verify with backend
-      if (referenceNumber.length > 0) {
+    try {
+      const result = await paymentService.verifyReceipt(referenceNumber);
+
+      if (result.success && result.data) {
         setValidationResult({
           valid: true,
-          reference: referenceNumber,
-          studentName: "Aminu Musa Bello",
-          amount: "₦5,000.00",
-          date: "2024-07-25 14:30:00",
-          status: "Verified",
+          reference: result.data.reference || referenceNumber,
+          studentName: result.data.studentName || result.data.firstName + ' ' + result.data.surname,
+          amount: result.data.amount ? `₦${(result.data.amount / 100).toLocaleString()}` : 'N/A',
+          date: result.data.paidAt || result.data.date || 'N/A',
+          status: result.data.status || "Verified",
         });
       } else {
         setValidationResult({
           valid: false,
-          message: "Receipt not found",
+          message: result.error || "Receipt not found or invalid",
         });
       }
+    } catch (err) {
+      setValidationResult({
+        valid: false,
+        message: "An error occurred while validating the receipt",
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   const handleClear = () => {
