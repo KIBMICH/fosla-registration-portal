@@ -1,33 +1,69 @@
-import React, { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import { paymentService } from "../../services";
 import "./AwaitPayment.css";
 
 const AwaitPayment = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // MOCK PAYSTACK LOADING FLOW
-    // This simulates Paystack loading, then successful payment
-    const timer = setTimeout(() => {
-      navigate("/receipt"); // navigate to receipt page
-    }, 3000); // 3 seconds spinner
+    const handlePaymentCallback = async () => {
+      // Check if this is a Paystack callback
+      const reference = searchParams.get('reference');
+      const status = searchParams.get('status');
 
-    return () => clearTimeout(timer);
-  }, [navigate]);
+      if (reference) {
+        // This is a Paystack callback
+        if (status === 'success') {
+          // Verify payment and navigate to receipt
+          navigate(`/receipt?reference=${reference}`);
+        } else {
+          // Payment failed or cancelled
+          setError('Payment was not completed. Please try again.');
+          setTimeout(() => {
+            navigate('/');
+          }, 3000);
+        }
+      } else {
+        // This is initial payment loading (from registration)
+        const stateData = location.state;
+        
+        if (stateData?.reference) {
+          // We have a reference from registration, simulate loading
+          setTimeout(() => {
+            navigate(`/receipt?reference=${stateData.reference}`);
+          }, 3000);
+        } else {
+          // No reference, redirect to home
+          setTimeout(() => {
+            navigate('/');
+          }, 2000);
+        }
+      }
+    };
+
+    handlePaymentCallback();
+  }, [navigate, searchParams, location]);
 
   return (
     <div className="await-payment-page">
       <div className="await-payment-card">
-        <div className="spinner"></div>
-
-        <h2>Redirecting to Payment</h2>
-        <p>Please wait while we prepare your payment session…</p>
-
-        {/* 
-          DEV NOTE:
-          Real Paystack inline or redirect will replace this later.
-          Backend + Paystack callback will control receipt navigation.
-        */}
+        {error ? (
+          <>
+            <div className="error-icon">✗</div>
+            <h2>Payment Failed</h2>
+            <p>{error}</p>
+          </>
+        ) : (
+          <>
+            <div className="spinner"></div>
+            <h2>Processing Payment</h2>
+            <p>Please wait while we verify your payment...</p>
+          </>
+        )}
       </div>
     </div>
   );

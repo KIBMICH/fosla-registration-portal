@@ -120,6 +120,22 @@ body {
   line-height: 1.5;
 }
 
+.event-amount {
+  margin-top: 16px;
+  padding: 12px 20px;
+  background-color: #dbeafe;
+  border-radius: 8px;
+  color: #1e40af;
+  font-size: 16px;
+}
+
+.loading-event {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #6b7280;
+  font-style: italic;
+}
+
 /* =========================
    FORM SECTION TITLE
 ========================= */

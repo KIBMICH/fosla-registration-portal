@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { eventService, paymentService } from "../../services";
 import "./BioDataForms.css"
 
@@ -8,6 +8,26 @@ function BiodataForms() {
   const formRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [eventInfo, setEventInfo] = useState(null);
+  const [loadingEvent, setLoadingEvent] = useState(true);
+
+  useEffect(() => {
+    // Fetch event information on component mount
+    const fetchEventInfo = async () => {
+      try {
+        const result = await eventService.getEventInfo();
+        if (result.success && result.data) {
+          setEventInfo(result.data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch event info:', err);
+      } finally {
+        setLoadingEvent(false);
+      }
+    };
+
+    fetchEventInfo();
+  }, []);
 
   const handleProceed = async (e) => {
     e.preventDefault();
@@ -99,6 +119,14 @@ function BiodataForms() {
             <p>
               Fill in the form below and pay for the scholarship screening exercise.
             </p>
+            {eventInfo && (
+              <div className="event-amount">
+                <strong>Registration Fee: ₦{(eventInfo.amount / 100).toLocaleString()}</strong>
+              </div>
+            )}
+            {loadingEvent && (
+              <div className="loading-event">Loading event information...</div>
+            )}
           </div>
 
       <form className="registration-form" ref={formRef} onSubmit={handleProceed}>
