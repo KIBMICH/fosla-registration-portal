@@ -41,13 +41,27 @@ const Receipt = () => {
             const paymentData = verifyResult.data;
             console.log('� Payment data structure:', JSON.stringify(paymentData, null, 2));
             
-            // Extract status
+            // Extract status - handle different status values from Paystack
             const status = paymentData.status || paymentData.paymentStatus || 'PENDING';
-            setPaymentStatus(status);
-            console.log('💳 Payment status:', status);
+            const normalizedStatus = status.toUpperCase();
+            
+            // Map Paystack statuses to our display statuses
+            let displayStatus;
+            if (normalizedStatus === 'SUCCESS' || normalizedStatus === 'SUCCESSFUL' || normalizedStatus === 'PAID') {
+              displayStatus = 'PAID';
+            } else if (normalizedStatus === 'FAILED') {
+              displayStatus = 'FAILED';
+            } else if (normalizedStatus === 'ABANDONED') {
+              displayStatus = 'ABANDONED';
+            } else {
+              displayStatus = 'PENDING';
+            }
+            
+            setPaymentStatus(displayStatus);
+            console.log('💳 Payment status:', displayStatus);
             
             // Check if payment is still pending
-            if (status === 'PENDING') {
+            if (displayStatus === 'PENDING') {
               console.warn(`⏳ Payment still pending (attempt ${attempt + 1}/${maxRetries})`);
               
               // If this is the last attempt, try localStorage fallback
@@ -85,6 +99,13 @@ const Receipt = () => {
               // Wait before retrying
               await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
               continue;
+            }
+            
+            // If payment failed or was abandoned, show error
+            if (displayStatus === 'FAILED' || displayStatus === 'ABANDONED') {
+              setError(`Payment ${displayStatus.toLowerCase()}. Please try registering again.`);
+              setLoading(false);
+              return;
             }
             
             // Payment is successful, extract data
@@ -297,12 +318,19 @@ const Receipt = () => {
     <div className="receipt-page">
       <div className="receipt-card" ref={receiptRef}>
         <h2 className="receipt-title">
-          {paymentStatus === 'PAID' ? 'Payment Successful' : 'Payment Pending'}
+          {paymentStatus === 'PAID' ? 'Payment Successful' : 
+           paymentStatus === 'PENDING' ? 'Payment Pending' :
+           paymentStatus === 'FAILED' ? 'Payment Failed' :
+           paymentStatus === 'ABANDONED' ? 'Payment Abandoned' : 'Payment Status'}
         </h2>
         <p className="receipt-subtitle">
           {paymentStatus === 'PAID' 
             ? 'Your scholarship screening registration has been completed successfully.'
-            : 'Your payment is being verified. Please check back shortly.'}
+            : paymentStatus === 'PENDING'
+            ? 'Your payment is being verified. Please check back shortly.'
+            : paymentStatus === 'FAILED'
+            ? 'Your payment could not be processed. Please try again.'
+            : 'Your payment was not completed. Please register again.'}
         </p>
 
         {paymentStatus && (
