@@ -53,8 +53,33 @@ const Receipt = () => {
             if (receiptData.status === 'PENDING' || receiptData.valid === false) {
               console.warn(`⏳ Payment still pending (attempt ${attempt + 1}/${maxRetries})`);
               
-              // If this is the last attempt, show pending message
+              // If this is the last attempt, try localStorage fallback
               if (attempt === maxRetries - 1) {
+                console.log('🔍 Trying localStorage fallback...');
+                const localData = localStorage.getItem(`registration_${reference}`);
+                if (localData) {
+                  const storedData = JSON.parse(localData);
+                  console.log('💾 Found data in localStorage:', storedData);
+                  
+                  setData({
+                    institution: "FOSLA Academy",
+                    event: "Scholarship Screening",
+                    studentName: `${storedData.firstName} ${storedData.surname}`,
+                    sex: storedData.sex || 'N/A',
+                    dob: storedData.dateOfBirth || 'N/A',
+                    age: storedData.age || 'N/A',
+                    stateOfOrigin: storedData.stateOfOrigin || 'N/A',
+                    position: storedData.positionOfPlay || 'N/A',
+                    guardianName: storedData.guardianFullName || 'N/A',
+                    guardianPhone: storedData.guardianPhoneNumber || 'N/A',
+                    amount: 'Paid', // We don't have amount in localStorage
+                    reference: storedData.reference,
+                    date: new Date().toLocaleString(),
+                  });
+                  setLoading(false);
+                  return;
+                }
+                
                 setError('Payment verification is taking longer than expected. Please check back in a few minutes or contact support.');
                 setLoading(false);
                 return;
@@ -99,8 +124,33 @@ const Receipt = () => {
           } else {
             console.warn(`⚠️ Attempt ${attempt + 1} failed:`, result.error);
             
-            // If this is the last attempt, show error
+            // If this is the last attempt, try localStorage fallback
             if (attempt === maxRetries - 1) {
+              console.log('🔍 Trying localStorage fallback...');
+              const localData = localStorage.getItem(`registration_${reference}`);
+              if (localData) {
+                const storedData = JSON.parse(localData);
+                console.log('💾 Found data in localStorage:', storedData);
+                
+                setData({
+                  institution: "FOSLA Academy",
+                  event: "Scholarship Screening",
+                  studentName: `${storedData.firstName} ${storedData.surname}`,
+                  sex: storedData.sex || 'N/A',
+                  dob: storedData.dateOfBirth || 'N/A',
+                  age: storedData.age || 'N/A',
+                  stateOfOrigin: storedData.stateOfOrigin || 'N/A',
+                  position: storedData.positionOfPlay || 'N/A',
+                  guardianName: storedData.guardianFullName || 'N/A',
+                  guardianPhone: storedData.guardianPhoneNumber || 'N/A',
+                  amount: 'Paid', // We don't have amount in localStorage
+                  reference: storedData.reference,
+                  date: new Date().toLocaleString(),
+                });
+                setLoading(false);
+                return;
+              }
+              
               setError(result.error || 'Failed to fetch receipt after multiple attempts. Your payment may still be processing.');
               setLoading(false);
               return;
@@ -112,8 +162,33 @@ const Receipt = () => {
         } catch (err) {
           console.error(`❌ Attempt ${attempt + 1} error:`, err);
           
-          // If this is the last attempt, show error
+          // If this is the last attempt, try localStorage fallback
           if (attempt === maxRetries - 1) {
+            console.log('🔍 Trying localStorage fallback...');
+            const localData = localStorage.getItem(`registration_${reference}`);
+            if (localData) {
+              const storedData = JSON.parse(localData);
+              console.log('💾 Found data in localStorage:', storedData);
+              
+              setData({
+                institution: "FOSLA Academy",
+                event: "Scholarship Screening",
+                studentName: `${storedData.firstName} ${storedData.surname}`,
+                sex: storedData.sex || 'N/A',
+                dob: storedData.dateOfBirth || 'N/A',
+                age: storedData.age || 'N/A',
+                stateOfOrigin: storedData.stateOfOrigin || 'N/A',
+                position: storedData.positionOfPlay || 'N/A',
+                guardianName: storedData.guardianFullName || 'N/A',
+                guardianPhone: storedData.guardianPhoneNumber || 'N/A',
+                amount: 'Paid', // We don't have amount in localStorage
+                reference: storedData.reference,
+                date: new Date().toLocaleString(),
+              });
+              setLoading(false);
+              return;
+            }
+            
             setError('Unable to load receipt. Your payment may still be processing. Please check back in a few minutes.');
             setLoading(false);
             return;

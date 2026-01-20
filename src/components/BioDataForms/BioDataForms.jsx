@@ -87,6 +87,15 @@ function BiodataForms() {
 
       console.log('🎫 Got registration ID:', registrationId, 'Reference:', reference);
 
+      // Store registration data in localStorage as backup for receipt
+      localStorage.setItem(`registration_${reference}`, JSON.stringify({
+        ...registrationData,
+        reference,
+        registrationId,
+        timestamp: new Date().toISOString(),
+      }));
+      console.log('💾 Stored registration data in localStorage for reference:', reference);
+
       // Initialize payment
       console.log('💳 Initializing payment with:', { registrationId, reference });
       const paymentResult = await paymentService.initializePayment({
