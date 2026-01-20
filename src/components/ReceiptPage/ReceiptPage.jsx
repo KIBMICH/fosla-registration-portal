@@ -26,25 +26,44 @@ const Receipt = () => {
 
       // Retry logic: Try up to 5 times with increasing delays
       const maxRetries = 5;
-      const retryDelays = [1000, 2000, 3000, 4000, 5000]; // milliseconds
+      const retryDelays = [2000, 3000, 4000, 5000, 6000]; // milliseconds - longer delays for webhook processing
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
           console.log(`🔄 Fetching receipt (attempt ${attempt + 1}/${maxRetries})...`);
           
-          // Try the regular receipt endpoint first
-          let result = await paymentService.getReceipt(reference);
+          // First, try to verify the payment (this might trigger backend verification)
+          let result = await paymentService.verifyReceipt(reference);
+          console.log('🔍 Verify result:', result);
 
-          // If that fails, try the verify endpoint as fallback
-          if (!result.success || !result.data) {
-            console.log('🔄 Trying verify endpoint as fallback...');
-            result = await paymentService.verifyReceipt(reference);
+          // If verify returns pending or no data, try the regular receipt endpoint
+          if (!result.success || !result.data || result.data.status === 'PENDING' || !result.data.valid) {
+            console.log('🔄 Trying receipt endpoint...');
+            result = await paymentService.getReceipt(reference);
+            console.log('📄 Receipt result:', result);
           }
 
+          // Check if we got valid data
           if (result.success && result.data) {
             const receiptData = result.data;
             console.log('✅ Receipt data fetched successfully:', receiptData);
             console.log('📋 Full response structure:', JSON.stringify(receiptData, null, 2));
+            
+            // Check if payment is still pending
+            if (receiptData.status === 'PENDING' || receiptData.valid === false) {
+              console.warn(`⏳ Payment still pending (attempt ${attempt + 1}/${maxRetries})`);
+              
+              // If this is the last attempt, show pending message
+              if (attempt === maxRetries - 1) {
+                setError('Payment verification is taking longer than expected. Please check back in a few minutes or contact support.');
+                setLoading(false);
+                return;
+              }
+              
+              // Wait before retrying
+              await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
+              continue;
+            }
             
             // Handle different possible field name variations from backend
             const firstName = receiptData.firstName || receiptData.first_name || receiptData.studentFirstName || '';
@@ -57,7 +76,7 @@ const Receipt = () => {
             const guardianName = receiptData.guardianFullName || receiptData.guardian_full_name || receiptData.guardianName || '';
             const guardianPhone = receiptData.guardianPhoneNumber || receiptData.guardian_phone_number || receiptData.guardianPhone || '';
             const amount = receiptData.amount || receiptData.amountPaid || receiptData.amount_paid || 0;
-            const reference = receiptData.reference || receiptData.paymentReference || receiptData.payment_reference || '';
+            const ref = receiptData.reference || receiptData.paymentReference || receiptData.payment_reference || reference;
             const paidAt = receiptData.paidAt || receiptData.paid_at || receiptData.paymentDate || receiptData.payment_date || new Date().toLocaleString();
             
             setData({
@@ -72,7 +91,7 @@ const Receipt = () => {
               guardianName: guardianName || 'N/A',
               guardianPhone: guardianPhone || 'N/A',
               amount: amount ? `₦${(amount / 100).toLocaleString()}` : 'N/A',
-              reference: reference || 'N/A',
+              reference: ref,
               date: paidAt,
             });
             setLoading(false);
@@ -82,7 +101,7 @@ const Receipt = () => {
             
             // If this is the last attempt, show error
             if (attempt === maxRetries - 1) {
-              setError(result.error || 'Failed to fetch receipt after multiple attempts');
+              setError(result.error || 'Failed to fetch receipt after multiple attempts. Your payment may still be processing.');
               setLoading(false);
               return;
             }
@@ -95,7 +114,7 @@ const Receipt = () => {
           
           // If this is the last attempt, show error
           if (attempt === maxRetries - 1) {
-            setError('Unable to load receipt. Please contact support with your payment reference.');
+            setError('Unable to load receipt. Your payment may still be processing. Please check back in a few minutes.');
             setLoading(false);
             return;
           }
@@ -129,7 +148,13 @@ const Receipt = () => {
   if (loading) {
     return (
       <div className="receipt-page">
-        <div className="loading">Loading receipt...</div>
+        <div className="loading">
+          <div className="spinner"></div>
+          <p>Verifying your payment with Paystack...</p>
+          <p style={{ fontSize: '0.9em', color: '#666', marginTop: '0.5rem' }}>
+            This may take a few moments
+          </p>
+        </div>
       </div>
     );
   }
