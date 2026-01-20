@@ -6,6 +6,7 @@
 export const API_CONFIG = {
   BASE_URL: import.meta.env.VITE_API_BASE_URL || 'https://flosla-payment-api.onrender.com/api',
   TIMEOUT: import.meta.env.VITE_API_TIMEOUT || 30000,
+  ADMIN_TIMEOUT: import.meta.env.VITE_ADMIN_TIMEOUT || 60000, // 60 seconds for admin (server wake-up time)
   HEADERS: {
     'Content-Type': 'application/json',
   },

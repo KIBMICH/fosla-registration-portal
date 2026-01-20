@@ -50,8 +50,10 @@ function AdminLogin() {
       clearTimeout(wakingUpTimer);
       
       // Check if it's a timeout error
-      if (err.message && err.message.includes('timeout')) {
-        setError("Server is taking longer than expected. Please try again in a moment.");
+      if (err.message && (err.message.includes('timeout') || err.message.includes('Timeout'))) {
+        setError("Connection timeout. The server may be starting up. Please try again in a moment.");
+      } else if (err.status === 408) {
+        setError("Request timed out. Please try again.");
       } else {
         setError("An unexpected error occurred. Please try again.");
       }
@@ -116,7 +118,14 @@ function AdminLogin() {
           )}
 
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
+            {loading ? (
+              <span className="btn-loading">
+                <span className="btn-spinner"></span>
+                Logging in...
+              </span>
+            ) : (
+              'Login'
+            )}
           </button>
         </form>
       </div>

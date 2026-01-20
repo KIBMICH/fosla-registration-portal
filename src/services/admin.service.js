@@ -4,7 +4,7 @@
  */
 
 import apiService from './api.service';
-import { API_ENDPOINTS } from '../config/api.config';
+import { API_ENDPOINTS, API_CONFIG } from '../config/api.config';
 
 class AdminService {
   /**
@@ -12,7 +12,12 @@ class AdminService {
    */
   async login(credentials) {
     try {
-      const response = await apiService.post(API_ENDPOINTS.ADMIN.LOGIN, credentials);
+      // Use longer timeout for admin login (server may need to wake up)
+      const response = await apiService.request(API_ENDPOINTS.ADMIN.LOGIN, {
+        method: 'POST',
+        body: JSON.stringify(credentials),
+        timeout: API_CONFIG.ADMIN_TIMEOUT,
+      });
       
       if (response.data?.token) {
         apiService.setAuthToken(response.data.token);

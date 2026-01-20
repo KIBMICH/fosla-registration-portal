@@ -78,9 +78,12 @@ class ApiService {
       headers: this.buildHeaders(options.headers),
     };
 
+    // Use custom timeout if provided, otherwise use default
+    const timeout = options.timeout || this.timeout;
+    
     // Add timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
     config.signal = controller.signal;
 
     try {
