@@ -10,6 +10,7 @@ function AdminRecords() {
   const [error, setError] = useState(null);
   const [exporting, setExporting] = useState(false);
   const [exportError, setExportError] = useState(null);
+  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' = newest first, 'asc' = oldest first
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -18,26 +19,32 @@ function AdminRecords() {
 
   useEffect(() => {
     fetchRegistrations();
-  }, [pagination.page, pagination.limit]);
+  }, [pagination.page, pagination.limit, sortOrder]);
 
   const fetchRegistrations = async () => {
     setLoading(true);
     setError(null);
 
     try {
+      // Request sorted data from backend
+      const sortParam = sortOrder === 'desc' ? '-registeredDate' : 'registeredDate';
+      
       const result = await adminService.getRegistrations({
         page: pagination.page,
         limit: pagination.limit,
+        sort: sortParam, // Sort by newest first (descending)
+        sortBy: 'registeredDate', // Alternative parameter name
+        order: sortOrder, // Alternative parameter name
       });
 
-     
-
       if (result.success && result.data) {
-        const registrations = result.data.registrations || result.data.data || [];
-       
+        let registrations = result.data.registrations || result.data.data || [];
         
-        setRecords(registrations);
-        setFilteredRecords(registrations);
+        // Client-side sort as fallback (in case backend doesn't sort)
+        const sortedRegistrations = sortByNewest(registrations, sortOrder);
+        
+        setRecords(sortedRegistrations);
+        setFilteredRecords(sortedRegistrations);
         
         // Get total from backend response - check multiple possible locations
         const total = result.data.total || 
@@ -60,17 +67,64 @@ function AdminRecords() {
     }
   };
 
+  // Helper function to sort records by newest first
+  const sortByNewest = (data, order = 'desc') => {
+    if (!data || data.length === 0) return data;
+    
+    const sorted = [...data].sort((a, b) => {
+      // Helper to get timestamp from record
+      const getTimestamp = (record) => {
+        // Try date fields first - including registeredDate!
+        const dateField = record.registeredDate || record.registered_date || 
+                         record.createdAt || record.created_at || 
+                         record.registrationDate || record.registration_date || 
+                         record.date;
+        
+        if (dateField) {
+          return new Date(dateField).getTime();
+        }
+        
+        // Extract from MongoDB ObjectId as fallback
+        if (record._id && typeof record._id === 'string' && record._id.length === 24) {
+          try {
+            const timestamp = parseInt(record._id.substring(0, 8), 16) * 1000;
+            return timestamp;
+          } catch (e) {
+            console.error('Error parsing _id:', record._id, e);
+          }
+        }
+        
+        return 0;
+      };
+      
+      const timeA = getTimestamp(a);
+      const timeB = getTimestamp(b);
+      
+      // Sort based on order
+      return order === 'desc' ? timeB - timeA : timeA - timeB;
+    });
+    
+    return sorted;
+  };
+
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'desc' ? 'asc' : 'desc');
+  };
+
   const handleSearch = (e) => {
     const term = e.target.value.toLowerCase();
     setSearchTerm(term);
 
-    const filtered = records.filter(
+    let filtered = records.filter(
       (record) =>
         record.firstName?.toLowerCase().includes(term) ||
         record.surname?.toLowerCase().includes(term) ||
         record.guardianPhoneNumber?.includes(term) ||
         record.email?.toLowerCase().includes(term)
     );
+
+    // Keep sorted after filtering
+    filtered = sortByNewest(filtered, sortOrder);
 
     setFilteredRecords(filtered);
   };
@@ -260,30 +314,50 @@ function AdminRecords() {
                   <th scope="col">Guardian Phone</th>
                   <th scope="col">Email</th>
                   <th scope="col">Status</th>
+                  <th scope="col" className="sortable-header" onClick={toggleSortOrder} style={{ cursor: 'pointer' }}>
+                    Registered {sortOrder === 'desc' ? '↓' : '↑'}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRecords.length > 0 ? (
-                  filteredRecords.map((record, index) => (
-                    <tr key={record._id || record.id || index}>
-                      <td>{record._id?.slice(-6) || index + 1}</td>
-                      <td>{record.firstName}</td>
-                      <td>{record.surname}</td>
-                      <td>{record.sex}</td>
-                      <td>{record.age}</td>
-                      <td>{record.positionOfPlay || 'N/A'}</td>
-                      <td>{record.guardianPhoneNumber}</td>
-                      <td>{record.email}</td>
-                      <td>
-                        <span className={`status-badge ${(record.paymentStatus || record.status || 'pending').toLowerCase()}`}>
-                          {record.paymentStatus || record.status || 'PENDING'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
+                  filteredRecords.map((record, index) => {
+                    // Get registration date - prioritize registeredDate field
+                    let regDate = record.registeredDate || record.registered_date || 
+                                 record.createdAt || record.created_at || 
+                                 record.registrationDate || record.registration_date || 
+                                 record.date;
+                    
+                    // If no date field, extract from MongoDB ObjectId
+                    if (!regDate && record._id && typeof record._id === 'string' && record._id.length === 24) {
+                      const timestamp = parseInt(record._id.substring(0, 8), 16) * 1000;
+                      regDate = new Date(timestamp);
+                    }
+                    
+                    const formattedDate = regDate ? new Date(regDate).toLocaleDateString() : 'N/A';
+                    
+                    return (
+                      <tr key={record._id || record.id || index}>
+                        <td>{record._id?.slice(-6) || index + 1}</td>
+                        <td>{record.firstName}</td>
+                        <td>{record.surname}</td>
+                        <td>{record.sex}</td>
+                        <td>{record.age}</td>
+                        <td>{record.positionOfPlay || 'N/A'}</td>
+                        <td>{record.guardianPhoneNumber}</td>
+                        <td>{record.email}</td>
+                        <td>
+                          <span className={`status-badge ${(record.paymentStatus || record.status || 'pending').toLowerCase()}`}>
+                            {record.paymentStatus || record.status || 'PENDING'}
+                          </span>
+                        </td>
+                        <td>{formattedDate}</td>
+                      </tr>
+                    );
+                  })
                 ) : (
                   <tr>
-                    <td colSpan="9" className="no-records">
+                    <td colSpan="10" className="no-records">
                       No records found
                     </td>
                   </tr>
