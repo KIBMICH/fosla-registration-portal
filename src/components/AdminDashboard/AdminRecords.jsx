@@ -28,12 +28,11 @@ function AdminRecords() {
         limit: pagination.limit,
       });
 
-      console.log('📊 Admin registrations response:', result);
+     
 
       if (result.success && result.data) {
         const registrations = result.data.registrations || result.data.data || [];
-        console.log('📋 Registrations data:', registrations);
-        console.log('📊 Pagination info:', result.data.pagination || result.data);
+       
         
         setRecords(registrations);
         setFilteredRecords(registrations);

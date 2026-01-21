@@ -1,62 +1,12 @@
 // Admin configuration and constants
-export const ADMIN_CREDENTIALS = {
-  email: "admin@fosla.com",
-  password: "admin123", // Mock - should be backend-validated in production
-};
+// NOTE: Admin credentials are NEVER stored in frontend code
+// All authentication is handled securely by the backend API
 
 export const ADMIN_TABS = {
   RECORDS: "records",
   VALIDATE: "validate",
   PASSWORD: "password",
 };
-
-export const MOCK_RECORDS = [
-  {
-    id: 1,
-    firstName: "Aminu",
-    surname: "Musa",
-    sex: "Male",
-    dob: "05/15/2010",
-    age: 14,
-    stateOfResidence: "Plateau",
-    stateOfOrigin: "Plateau",
-    position: "Midfielder",
-    guardianName: "Fatima Bello",
-    guardianPhone: "+234 801 234 5678",
-    registeredDate: "2024-07-25",
-    status: "Paid",
-  },
-  {
-    id: 2,
-    firstName: "Chioma",
-    surname: "Okafor",
-    sex: "Female",
-    dob: "03/20/2011",
-    age: 13,
-    stateOfResidence: "Lagos",
-    stateOfOrigin: "Enugu",
-    position: "Forward",
-    guardianName: "Mrs. Okafor",
-    guardianPhone: "+234 802 345 6789",
-    registeredDate: "2024-07-26",
-    status: "Paid",
-  },
-  {
-    id: 3,
-    firstName: "Tunde",
-    surname: "Adeyemi",
-    sex: "Male",
-    dob: "08/10/2010",
-    age: 13,
-    stateOfResidence: "Oyo",
-    stateOfOrigin: "Oyo",
-    position: "Goal-keeper",
-    guardianName: "Mr. Adeyemi",
-    guardianPhone: "+234 803 456 7890",
-    registeredDate: "2024-07-27",
-    status: "Pending",
-  },
-];
 
 export const PASSWORD_MIN_LENGTH = 6;
 

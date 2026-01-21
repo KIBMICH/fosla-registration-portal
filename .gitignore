@@ -12,10 +12,28 @@ dist
 dist-ssr
 *.local
 
-# Environment variables
+# Environment variables - NEVER commit these files
 .env
 .env.local
 .env.production
+.env.development
+.env*.local
+
+# Security - ensure no sensitive data is committed
+*.pem
+*.key
+*.cert
+secrets.json
+
+# Internal documentation - should not be public
+ADMIN_SETUP.md
+SECURITY_IMPROVEMENTS.md
+SECURITY_FIX_SUMMARY.md
+QUICK_REFERENCE.md
+SECURITY_NOTES.txt
+GIT_SECURITY_AUDIT.txt
+FINAL_SECURITY_CHECKLIST.txt
+verify-security-fix.cjs
 
 # Editor directories and files
 .vscode/*

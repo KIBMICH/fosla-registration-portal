@@ -12,6 +12,14 @@ class AdminService {
    */
   async login(credentials) {
     try {
+      // Validate credentials before sending
+      if (!credentials.email || !credentials.password) {
+        return {
+          success: false,
+          error: 'Email and password are required',
+        };
+      }
+
       // Use longer timeout for admin login (server may need to wake up)
       const response = await apiService.request(API_ENDPOINTS.ADMIN.LOGIN, {
         method: 'POST',
@@ -19,11 +27,25 @@ class AdminService {
         timeout: API_CONFIG.ADMIN_TIMEOUT,
       });
       
-      if (response.data?.token) {
-        apiService.setAuthToken(response.data.token);
-        // Store admin email for display
-        localStorage.setItem('adminEmail', credentials.email);
+      // Validate response contains proper JWT token
+      const token = response.data?.token || response.token;
+      
+      if (!token || typeof token !== 'string' || token === 'true') {
+        return {
+          success: false,
+          error: 'Invalid authentication response from server',
+        };
       }
+      
+      // Extract token expiry if provided (default 24 hours)
+      const expiresIn = response.data?.expiresIn || response.expiresIn || 86400;
+      
+      // Store token securely
+      apiService.setAuthToken(token);
+      
+      // Store admin email for display (using auth utility for consistency)
+      const { setAuthToken } = await import('../utils/auth');
+      setAuthToken(token, credentials.email, expiresIn);
       
       return {
         success: true,
@@ -32,7 +54,7 @@ class AdminService {
     } catch (error) {
       return {
         success: false,
-        error: error.message,
+        error: error.message || 'Login failed',
       };
     }
   }
