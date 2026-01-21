@@ -31,15 +31,10 @@ const Receipt = () => {
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         try {
-          console.log(`🔄 Verifying payment (attempt ${attempt + 1}/${maxRetries})...`);
-          
-          // Use the correct verification endpoint with query parameter
           const verifyResult = await paymentService.verifyPayment(reference);
-          console.log('🔍 Payment verification result:', verifyResult);
 
           if (verifyResult.success && verifyResult.data) {
             const paymentData = verifyResult.data;
-            console.log('� Payment data structure:', JSON.stringify(paymentData, null, 2));
             
             // Extract status - handle different status values from Paystack
             const status = paymentData.status || paymentData.paymentStatus || 'PENDING';
@@ -109,47 +104,58 @@ const Receipt = () => {
             }
             
             // Payment is successful, extract data
-            // Handle different possible field name variations
-            const firstName = paymentData.firstName || paymentData.first_name || paymentData.studentFirstName || '';
-            const surname = paymentData.surname || paymentData.last_name || paymentData.lastName || paymentData.studentSurname || '';
-            const sex = paymentData.sex || paymentData.gender || '';
-            const dob = paymentData.dateOfBirth || paymentData.date_of_birth || paymentData.dob || '';
-            const age = paymentData.age || '';
-            const stateOfOrigin = paymentData.stateOfOrigin || paymentData.state_of_origin || paymentData.state || '';
-            const position = paymentData.positionOfPlay || paymentData.position_of_play || paymentData.position || '';
-            const guardianName = paymentData.guardianFullName || paymentData.guardian_full_name || paymentData.guardianName || '';
-            const guardianPhone = paymentData.guardianPhoneNumber || paymentData.guardian_phone_number || paymentData.guardianPhone || '';
+            // First, try to get data from localStorage (most reliable source)
+            const localData = localStorage.getItem(`registration_${reference}`);
+            let registrationData = null;
+            
+            if (localData) {
+              try {
+                registrationData = JSON.parse(localData);
+              } catch (e) {
+                console.error('Failed to parse localStorage data:', e);
+              }
+            }
+            
+            // If localStorage has data, use it (most reliable)
+            if (registrationData) {
+              const amount = paymentData.amount || paymentData.amountPaid || paymentData.amount_paid || 0;
+              const paidAt = paymentData.paidAt || paymentData.paid_at || paymentData.paymentDate || paymentData.payment_date || new Date().toLocaleString();
+              
+              setData({
+                institution: "FOSLA Academy",
+                event: "Scholarship Screening",
+                studentName: `${registrationData.firstName} ${registrationData.surname}`,
+                sex: registrationData.sex || 'N/A',
+                dob: registrationData.dateOfBirth || 'N/A',
+                age: registrationData.age || 'N/A',
+                stateOfOrigin: registrationData.stateOfOrigin || 'N/A',
+                position: registrationData.positionOfPlay || 'N/A',
+                guardianName: registrationData.guardianFullName || 'N/A',
+                guardianPhone: registrationData.guardianPhoneNumber || 'N/A',
+                amount: amount ? `₦${(amount / 100).toLocaleString()}` : 'N/A',
+                reference: registrationData.reference || reference,
+                date: paidAt,
+              });
+              setLoading(false);
+              return;
+            }
+            
+            // Fallback: Try to extract from backend response (if available)
+            // Check if registration data is nested in the payment response
+            const backendRegistration = paymentData.registration || paymentData.registrationData || paymentData;
+            
+            const firstName = backendRegistration.firstName || backendRegistration.first_name || backendRegistration.studentFirstName || '';
+            const surname = backendRegistration.surname || backendRegistration.last_name || backendRegistration.lastName || backendRegistration.studentSurname || '';
+            const sex = backendRegistration.sex || backendRegistration.gender || '';
+            const dob = backendRegistration.dateOfBirth || backendRegistration.date_of_birth || backendRegistration.dob || '';
+            const age = backendRegistration.age || '';
+            const stateOfOrigin = backendRegistration.stateOfOrigin || backendRegistration.state_of_origin || backendRegistration.state || '';
+            const position = backendRegistration.positionOfPlay || backendRegistration.position_of_play || backendRegistration.position || '';
+            const guardianName = backendRegistration.guardianFullName || backendRegistration.guardian_full_name || backendRegistration.guardianName || '';
+            const guardianPhone = backendRegistration.guardianPhoneNumber || backendRegistration.guardian_phone_number || backendRegistration.guardianPhone || '';
             const amount = paymentData.amount || paymentData.amountPaid || paymentData.amount_paid || 0;
             const ref = paymentData.reference || reference;
             const paidAt = paymentData.paidAt || paymentData.paid_at || paymentData.paymentDate || paymentData.payment_date || new Date().toLocaleString();
-            
-            // If we don't have registration data from backend, try localStorage
-            if (!firstName && !surname) {
-              console.log('🔍 No registration data in payment response, checking localStorage...');
-              const localData = localStorage.getItem(`registration_${reference}`);
-              if (localData) {
-                const storedData = JSON.parse(localData);
-                console.log('💾 Using data from localStorage:', storedData);
-                
-                setData({
-                  institution: "FOSLA Academy",
-                  event: "Scholarship Screening",
-                  studentName: `${storedData.firstName} ${storedData.surname}`,
-                  sex: storedData.sex || 'N/A',
-                  dob: storedData.dateOfBirth || 'N/A',
-                  age: storedData.age || 'N/A',
-                  stateOfOrigin: storedData.stateOfOrigin || 'N/A',
-                  position: storedData.positionOfPlay || 'N/A',
-                  guardianName: storedData.guardianFullName || 'N/A',
-                  guardianPhone: storedData.guardianPhoneNumber || 'N/A',
-                  amount: amount ? `₦${(amount / 100).toLocaleString()}` : 'N/A',
-                  reference: ref,
-                  date: paidAt,
-                });
-                setLoading(false);
-                return;
-              }
-            }
             
             setData({
               institution: "FOSLA Academy",
@@ -169,15 +175,11 @@ const Receipt = () => {
             setLoading(false);
             return; // Success, exit the retry loop
           } else {
-            console.warn(`⚠️ Attempt ${attempt + 1} failed:`, verifyResult.error);
-            
             // If this is the last attempt, try localStorage fallback
             if (attempt === maxRetries - 1) {
-              console.log('🔍 Trying localStorage fallback...');
               const localData = localStorage.getItem(`registration_${reference}`);
               if (localData) {
                 const storedData = JSON.parse(localData);
-                console.log('💾 Found data in localStorage:', storedData);
                 
                 setData({
                   institution: "FOSLA Academy",
@@ -208,15 +210,11 @@ const Receipt = () => {
             await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
           }
         } catch (err) {
-          console.error(`❌ Attempt ${attempt + 1} error:`, err);
-          
           // If this is the last attempt, try localStorage fallback
           if (attempt === maxRetries - 1) {
-            console.log('🔍 Trying localStorage fallback...');
             const localData = localStorage.getItem(`registration_${reference}`);
             if (localData) {
               const storedData = JSON.parse(localData);
-              console.log('💾 Found data in localStorage:', storedData);
               
               setData({
                 institution: "FOSLA Academy",

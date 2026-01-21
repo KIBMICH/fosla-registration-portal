@@ -58,11 +58,8 @@ function BiodataForms() {
         email: formData.get('email'),
       };
 
-      console.log('📝 Submitting registration:', registrationData);
-
       // Register for event
       const registrationResult = await eventService.registerForEvent(registrationData);
-      console.log('✅ Registration result:', registrationResult);
 
       if (!registrationResult.success) {
         setError(registrationResult.error || 'Registration failed');
@@ -72,20 +69,16 @@ function BiodataForms() {
 
       // Check what data we got back
       const responseData = registrationResult.data;
-      console.log('📦 Registration response data:', responseData);
 
       // Try to extract the necessary fields
       const registrationId = responseData.registrationId || responseData._id || responseData.id;
       const reference = responseData.reference;
 
       if (!registrationId || !reference) {
-        console.error('❌ Missing required fields:', { registrationId, reference });
         setError('Registration succeeded but missing payment information. Please contact support.');
         setLoading(false);
         return;
       }
-
-      console.log('🎫 Got registration ID:', registrationId, 'Reference:', reference);
 
       // Store registration data in localStorage as backup for receipt
       localStorage.setItem(`registration_${reference}`, JSON.stringify({
@@ -94,18 +87,14 @@ function BiodataForms() {
         registrationId,
         timestamp: new Date().toISOString(),
       }));
-      console.log('💾 Stored registration data in localStorage for reference:', reference);
 
       // Initialize payment
-      console.log('💳 Initializing payment with:', { registrationId, reference });
       const paymentResult = await paymentService.initializePayment({
         registrationId,
         reference,
       });
-      console.log('💰 Payment result:', paymentResult);
 
       if (!paymentResult.success) {
-        console.error('❌ Payment initialization failed:', paymentResult.error);
         setError(`Payment initialization failed: ${paymentResult.error}`);
         setLoading(false);
         return;
@@ -117,15 +106,12 @@ function BiodataForms() {
                       paymentResult.data?.data?.authorization_url;
 
       if (authUrl) {
-        console.log('🚀 Redirecting to Paystack:', authUrl);
         window.location.href = authUrl;
       } else {
-        console.error('⚠️ No authorization_url in response:', paymentResult.data);
         setError('Payment initialization failed. No payment URL received. Please try again or contact support.');
         setLoading(false);
       }
     } catch (err) {
-      console.error('❌ Error during registration/payment:', err);
       setError(`An unexpected error occurred: ${err.message || 'Please try again.'}`);
       setLoading(false);
     }
