@@ -12,11 +12,11 @@ const Receipt = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [paymentStatus, setPaymentStatus] = useState(null); // 'PENDING' or 'PAID'
+  const [paymentStatus, setPaymentStatus] = useState(null); 
 
   useEffect(() => {
     const fetchReceipt = async () => {
-      // Get reference from URL params or state
+      
       const reference = searchParams.get('reference') || state?.reference;
 
       if (!reference) {
@@ -25,7 +25,7 @@ const Receipt = () => {
         return;
       }
 
-      // Retry logic: Try up to 5 times with increasing delays
+      
       const maxRetries = 5;
       const retryDelays = [2000, 3000, 4000, 5000, 6000]; // milliseconds - longer delays for webhook processing
 
@@ -36,11 +36,11 @@ const Receipt = () => {
           if (verifyResult.success && verifyResult.data) {
             const paymentData = verifyResult.data;
             
-            // Extract status - handle different status values from Paystack
+            
             const status = paymentData.status || paymentData.paymentStatus || 'PENDING';
             const normalizedStatus = status.toUpperCase();
             
-            // Map Paystack statuses to our display statuses
+            
             let displayStatus;
             if (normalizedStatus === 'SUCCESS' || normalizedStatus === 'SUCCESSFUL' || normalizedStatus === 'PAID') {
               displayStatus = 'PAID';
@@ -55,17 +55,17 @@ const Receipt = () => {
             setPaymentStatus(displayStatus);
             console.log('💳 Payment status:', displayStatus);
             
-            // Check if payment is still pending
+            
             if (displayStatus === 'PENDING') {
               console.warn(`⏳ Payment still pending (attempt ${attempt + 1}/${maxRetries})`);
               
-              // If this is the last attempt, try localStorage fallback
+              
               if (attempt === maxRetries - 1) {
-                console.log('🔍 Trying localStorage fallback...');
+                
                 const localData = localStorage.getItem(`registration_${reference}`);
                 if (localData) {
                   const storedData = JSON.parse(localData);
-                  console.log('� Found data in localStorage:', storedData);
+                  
                   
                   setData({
                     institution: "FOSLA Academy",
@@ -91,20 +91,19 @@ const Receipt = () => {
                 return;
               }
               
-              // Wait before retrying
+              
               await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
               continue;
             }
             
-            // If payment failed or was abandoned, show error
+            
             if (displayStatus === 'FAILED' || displayStatus === 'ABANDONED') {
               setError(`Payment ${displayStatus.toLowerCase()}. Please try registering again.`);
               setLoading(false);
               return;
             }
             
-            // Payment is successful, extract data
-            // First, try to get data from localStorage (most reliable source)
+            
             const localData = localStorage.getItem(`registration_${reference}`);
             let registrationData = null;
             
@@ -116,7 +115,7 @@ const Receipt = () => {
               }
             }
             
-            // If localStorage has data, use it (most reliable)
+            
             if (registrationData) {
               const amount = paymentData.amount || paymentData.amountPaid || paymentData.amount_paid || 0;
               const paidAt = paymentData.paidAt || paymentData.paid_at || paymentData.paymentDate || paymentData.payment_date || new Date().toLocaleString();
@@ -140,8 +139,7 @@ const Receipt = () => {
               return;
             }
             
-            // Fallback: Try to extract from backend response (if available)
-            // Check if registration data is nested in the payment response
+            
             const backendRegistration = paymentData.registration || paymentData.registrationData || paymentData;
             
             const firstName = backendRegistration.firstName || backendRegistration.first_name || backendRegistration.studentFirstName || '';
@@ -173,9 +171,9 @@ const Receipt = () => {
               date: paidAt,
             });
             setLoading(false);
-            return; // Success, exit the retry loop
+            return; 
           } else {
-            // If this is the last attempt, try localStorage fallback
+            
             if (attempt === maxRetries - 1) {
               const localData = localStorage.getItem(`registration_${reference}`);
               if (localData) {
@@ -206,11 +204,11 @@ const Receipt = () => {
               return;
             }
             
-            // Wait before retrying
+            
             await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
           }
         } catch (err) {
-          // If this is the last attempt, try localStorage fallback
+          
           if (attempt === maxRetries - 1) {
             const localData = localStorage.getItem(`registration_${reference}`);
             if (localData) {
@@ -241,7 +239,7 @@ const Receipt = () => {
             return;
           }
           
-          // Wait before retrying
+          
           await new Promise(resolve => setTimeout(resolve, retryDelays[attempt]));
         }
       }
@@ -296,8 +294,7 @@ const Receipt = () => {
             </div>
           )}
           <p style={{ marginTop: '1rem', fontSize: '0.9em', color: '#666' }}>
-            Your payment was successful, but the receipt is still being processed. 
-            Please wait a moment and try refreshing, or contact support with your reference number.
+          
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px', marginTop: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>

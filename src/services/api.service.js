@@ -13,16 +13,25 @@ class ApiService {
 
   /**
    * Get auth token from localStorage
+   * @returns {string|null} Valid token or null
    */
   getAuthToken() {
-    return localStorage.getItem('authToken');
+    const token = localStorage.getItem('authToken');
+    
+    // Reject old-style "true" tokens
+    if (token === 'true' || !token) {
+      return null;
+    }
+    
+    return token;
   }
 
   /**
    * Set auth token in localStorage
+   * @param {string|null} token - JWT token or null to remove
    */
   setAuthToken(token) {
-    if (token) {
+    if (token && typeof token === 'string' && token !== 'true') {
       localStorage.setItem('authToken', token);
     } else {
       localStorage.removeItem('authToken');

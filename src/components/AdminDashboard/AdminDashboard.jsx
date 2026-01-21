@@ -14,9 +14,20 @@ function AdminDashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!adminService.isAuthenticated()) {
-      navigate("/admin/login");
-    }
+    // Check authentication on mount and periodically
+    const checkAuth = () => {
+      if (!adminService.isAuthenticated()) {
+        adminService.logout();
+        navigate("/admin/login", { replace: true });
+      }
+    };
+
+    checkAuth();
+
+    // Check auth every 60 seconds to catch expired tokens
+    const authCheckInterval = setInterval(checkAuth, 60000);
+
+    return () => clearInterval(authCheckInterval);
   }, [navigate]);
 
   const handleLogout = () => {
