@@ -87,9 +87,14 @@ class AdminService {
    */
   async changePassword(passwordData) {
     try {
-      const response = await apiService.post(
+      // Use longer timeout for admin operations (server may be slow)
+      const response = await apiService.request(
         API_ENDPOINTS.ADMIN.CHANGE_PASSWORD,
-        passwordData
+        {
+          method: 'POST',
+          body: JSON.stringify(passwordData),
+          timeout: API_CONFIG.ADMIN_TIMEOUT,
+        }
       );
       return {
         success: true,
