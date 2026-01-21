@@ -52,12 +52,6 @@ class ApiService {
         message: response.statusText || 'An error occurred',
       }));
       
-      console.error('❌ API Error Response:', {
-        status: response.status,
-        url: response.url,
-        error: error
-      });
-      
       throw {
         status: response.status,
         message: error.message || error.error || error.msg || 'Request failed',

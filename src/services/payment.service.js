@@ -17,8 +17,6 @@ class PaymentService {
         paymentData
       );
       
-      console.log('💳 Payment API Response:', response);
-      
       // Handle different response structures
       const responseData = response.data || response;
       
@@ -27,7 +25,6 @@ class PaymentService {
         data: responseData,
       };
     } catch (error) {
-      console.error('❌ Payment initialization error:', error);
       return {
         success: false,
         error: error.message,
