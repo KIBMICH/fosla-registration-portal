@@ -8,6 +8,8 @@ function AdminRecords() {
   const [filteredRecords, setFilteredRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState(null);
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 20,
@@ -74,20 +76,125 @@ function AdminRecords() {
   };
 
   const handleExport = async () => {
+    setExporting(true);
+    setExportError(null);
+
     try {
+      // Try to get export from backend first
       const result = await adminService.exportRecords();
-      if (result.success) {
-        // Handle CSV download
-        const blob = new Blob([result.data], { type: 'text/csv' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `registrations-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
+      
+      if (result.success && result.data) {
+        // Check if we got CSV data
+        let csvData = result.data;
+        
+        // If data is an object/array, convert to CSV
+        if (typeof csvData === 'object' && !csvData.includes) {
+          csvData = convertToCSV(Array.isArray(csvData) ? csvData : [csvData]);
+        }
+        
+        // Create and download CSV file
+        downloadCSV(csvData, `fosla-registrations-${new Date().toISOString().split('T')[0]}.csv`);
+        
+        // Show success message briefly
+        setExportError('✓ Export successful!');
+        setTimeout(() => setExportError(null), 3000);
+      } else {
+        // Fallback: Export current visible records
+        if (records.length > 0) {
+          const csvData = convertToCSV(records);
+          downloadCSV(csvData, `fosla-registrations-current-${new Date().toISOString().split('T')[0]}.csv`);
+          setExportError('✓ Exported current page records!');
+          setTimeout(() => setExportError(null), 3000);
+        } else {
+          setExportError(result.error || 'No records to export.');
+        }
       }
     } catch (err) {
-      console.error('Export failed:', err);
+      // Fallback: Export current visible records on error
+      if (records.length > 0) {
+        try {
+          const csvData = convertToCSV(records);
+          downloadCSV(csvData, `fosla-registrations-current-${new Date().toISOString().split('T')[0]}.csv`);
+          setExportError('✓ Exported current page records (backend unavailable).');
+          setTimeout(() => setExportError(null), 3000);
+        } catch (fallbackErr) {
+          setExportError('Export failed. Please try again.');
+        }
+      } else {
+        setExportError('Export failed. Please check your connection and try again.');
+      }
+    } finally {
+      setExporting(false);
     }
+  };
+
+  // Helper function to download CSV
+  const downloadCSV = (csvData, filename) => {
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
+
+  // Helper function to convert array of objects to CSV
+  const convertToCSV = (data) => {
+    if (!data || data.length === 0) {
+      return 'No data available';
+    }
+
+    // Define the columns we want to export
+    const columns = [
+      { key: '_id', label: 'ID' },
+      { key: 'firstName', label: 'First Name' },
+      { key: 'surname', label: 'Surname' },
+      { key: 'sex', label: 'Sex' },
+      { key: 'dateOfBirth', label: 'Date of Birth' },
+      { key: 'age', label: 'Age' },
+      { key: 'stateOfResidence', label: 'State of Residence' },
+      { key: 'stateOfOrigin', label: 'State of Origin' },
+      { key: 'positionOfPlay', label: 'Position' },
+      { key: 'guardianFullName', label: 'Guardian Name' },
+      { key: 'guardianPhoneNumber', label: 'Guardian Phone' },
+      { key: 'email', label: 'Email' },
+      { key: 'paymentStatus', label: 'Payment Status' },
+      { key: 'createdAt', label: 'Registration Date' }
+    ];
+
+    // Create CSV headers
+    const csvHeaders = columns.map(col => col.label).join(',');
+
+    // Convert each row
+    const csvRows = data.map(row => {
+      return columns.map(col => {
+        let value = row[col.key] || row[col.key.toLowerCase()] || '';
+        
+        // Handle special cases
+        if (col.key === '_id' && value) {
+          value = value.slice ? value.slice(-6) : value;
+        }
+        if (col.key === 'paymentStatus') {
+          value = row.paymentStatus || row.status || 'PENDING';
+        }
+        if (col.key === 'createdAt' && value) {
+          value = new Date(value).toLocaleString();
+        }
+        
+        // Handle values with commas, quotes, or newlines
+        const stringValue = String(value);
+        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+          return `"${stringValue.replace(/"/g, '""')}"`;
+        }
+        return stringValue;
+      }).join(',');
+    });
+
+    return [csvHeaders, ...csvRows].join('\n');
   };
 
   return (
@@ -95,10 +202,20 @@ function AdminRecords() {
       <div className="records-header">
         <h2>Registered Applicants</h2>
         <p>Total Records: {pagination.total}</p>
-        <button onClick={handleExport} className="export-btn">
-          Export CSV
+        <button 
+          onClick={handleExport} 
+          className="export-btn"
+          disabled={exporting || loading || records.length === 0}
+        >
+          {exporting ? 'Exporting...' : 'Export CSV'}
         </button>
       </div>
+
+      {exportError && (
+        <div className={`export-message ${exportError.startsWith('✓') ? 'success' : 'error'}`}>
+          {exportError}
+        </div>
+      )}
 
       <div className="search-box">
         <input
