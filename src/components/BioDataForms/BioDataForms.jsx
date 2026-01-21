@@ -4,13 +4,15 @@ import { eventService, paymentService } from "../../services";
 import "./BioDataForms.css"
 
 function BiodataForms() {
-  const navigate = useNavigate();
   const formRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [eventInfo, setEventInfo] = useState(null);
   const [loadingEvent, setLoadingEvent] = useState(true);
-
+  const [age, setAge] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDate, setSelectedDate] = useState('');
+  const dobInputRef = useRef(null);
   useEffect(() => {
     // Fetch event information on component mount
     const fetchEventInfo = async () => {
@@ -28,6 +30,76 @@ function BiodataForms() {
 
     fetchEventInfo();
   }, []);
+
+  const calculateAge = (dob) => {
+    if (!dob) return '';
+    
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      calculatedAge--;
+    }
+    
+    return calculatedAge;
+  };
+
+  const handleDobChange = (e) => {
+    let input = e.target.value;
+    
+    // Remove non-numeric characters except slashes
+    input = input.replace(/[^\d/]/g, '');
+    
+    // Auto-format as user types: DD/MM/YYYY
+    if (input.length === 2 && !input.includes('/')) {
+      input = input + '/';
+    } else if (input.length === 5 && input.split('/').length === 2) {
+      input = input + '/';
+    }
+    
+    // Limit to DD/MM/YYYY format
+    if (input.length > 10) {
+      input = input.substring(0, 10);
+    }
+    
+    // Update the input value
+    e.target.value = input;
+    setSelectedDate(input);
+    
+    // Calculate age if complete date entered
+    const parts = input.split('/');
+    if (parts.length === 3 && parts[2].length === 4) {
+      const day = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+      const year = parseInt(parts[2]);
+      
+      if (!isNaN(day) && !isNaN(month) && !isNaN(year) && 
+          day >= 1 && day <= 31 && month >= 0 && month <= 11) {
+        const date = new Date(year, month, day);
+        const calculatedAge = calculateAge(date);
+        setAge(calculatedAge);
+      }
+    }
+  };
+
+  const handleDatePickerSelect = (date) => {
+    // Format as DD/MM/YYYY
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = date.getFullYear();
+    const formatted = `${day}/${month}/${year}`;
+    
+    setSelectedDate(formatted);
+    if (dobInputRef.current) {
+      dobInputRef.current.value = formatted;
+    }
+    
+    const calculatedAge = calculateAge(date);
+    setAge(calculatedAge);
+    setShowDatePicker(false);
+  };
 
   const handleProceed = async (e) => {
     e.preventDefault();
@@ -188,12 +260,123 @@ function BiodataForms() {
 
         <div className="form-group">
           <label htmlFor="dob">Date of Birth</label>
-          <input id="dob" name="dob" type="text" placeholder="Enter Date of Birth (MM/DD/YYYY)" required />
+          <div style={{ position: 'relative', display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <input 
+              ref={dobInputRef}
+              id="dob" 
+              name="dob" 
+              type="text" 
+              placeholder="DD/MM/YYYY (e.g., 15/03/2013)"
+              maxLength="10"
+              value={selectedDate}
+              onChange={handleDobChange}
+              onBlur={(e) => {
+                // Validate on blur
+                const input = e.target.value;
+                if (input && !input.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+                  e.target.setCustomValidity('Please use DD/MM/YYYY format (e.g., 15/03/2013)');
+                } else if (input) {
+                  // Validate date is reasonable
+                  const parts = input.split('/');
+                  const day = parseInt(parts[0]);
+                  const month = parseInt(parts[1]);
+                  const year = parseInt(parts[2]);
+                  
+                  if (day < 1 || day > 31 || month < 1 || month > 12 || year < 2010 || year > 2016) {
+                    e.target.setCustomValidity('Please enter a valid date for U-13 registration (ages 10-13)');
+                  } else {
+                    e.target.setCustomValidity('');
+                  }
+                } else {
+                  e.target.setCustomValidity('');
+                }
+              }}
+              style={{ flex: 1 }}
+              required 
+            />
+            <button
+              type="button"
+              onClick={() => setShowDatePicker(!showDatePicker)}
+              style={{
+                padding: '12px 16px',
+                border: '1px solid #d1d5db',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                cursor: 'pointer',
+                fontSize: '18px',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+              onMouseOut={(e) => e.target.style.backgroundColor = '#ffffff'}
+              title="Open calendar"
+            >
+              📅
+            </button>
+          </div>
+          <small style={{ color: '#6b7280', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+            Format: DD/MM/YYYY (Day/Month/Year) - Click 📅 for calendar
+          </small>
+          
+          {showDatePicker && (
+            <div style={{
+              position: 'absolute',
+              zIndex: 1000,
+              marginTop: '4px',
+              backgroundColor: '#ffffff',
+              border: '1px solid #d1d5db',
+              borderRadius: '12px',
+              padding: '16px',
+              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15)',
+              maxWidth: '320px'
+            }}>
+              <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <strong style={{ fontSize: '14px' }}>Select Date of Birth</strong>
+                <button
+                  type="button"
+                  onClick={() => setShowDatePicker(false)}
+                  style={{
+                    border: 'none',
+                    background: 'none',
+                    fontSize: '20px',
+                    cursor: 'pointer',
+                    padding: '4px 8px'
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              <input
+                type="date"
+                max={new Date(new Date().setFullYear(new Date().getFullYear() - 10)).toISOString().split('T')[0]}
+                min={new Date(new Date().setFullYear(new Date().getFullYear() - 14)).toISOString().split('T')[0]}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    handleDatePickerSelect(new Date(e.target.value));
+                  }
+                }}
+                style={{
+                  width: '100%',
+                  padding: '10px',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+              />
+            </div>
+          )}
         </div>
 
         <div className="form-group">
           <label htmlFor="age">Age</label>
-          <input id="age" name="age" type="number" placeholder="Enter Age" required />
+          <input 
+            id="age" 
+            name="age" 
+            type="number" 
+            placeholder="Age (auto-calculated)" 
+            value={age}
+            readOnly
+            required 
+          />
         </div>
 
         <div className="form-group">
