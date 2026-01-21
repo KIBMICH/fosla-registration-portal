@@ -87,13 +87,13 @@ class AdminService {
    */
   async changePassword(passwordData) {
     try {
-      // Use longer timeout for admin operations (server may be slow)
+      // Use extra long timeout for password change (bcrypt hashing is slow)
       const response = await apiService.request(
         API_ENDPOINTS.ADMIN.CHANGE_PASSWORD,
         {
           method: 'POST',
           body: JSON.stringify(passwordData),
-          timeout: API_CONFIG.ADMIN_TIMEOUT,
+          timeout: API_CONFIG.LONG_TIMEOUT, // 120 seconds
         }
       );
       return {
