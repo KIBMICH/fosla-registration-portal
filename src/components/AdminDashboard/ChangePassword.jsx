@@ -50,10 +50,26 @@ function ChangePassword() {
         setNewPassword("");
         setConfirmPassword("");
       } else {
-        setMessage({ type: "error", text: result.error || VALIDATION_MESSAGES.INCORRECT_PASSWORD });
+        // Check if it's a timeout error
+        if (result.error && (result.error.includes('timeout') || result.error.includes('Timeout'))) {
+          setMessage({ 
+            type: "warning", 
+            text: "Request timed out, but password may have been changed. Please try logging in with your new password." 
+          });
+        } else {
+          setMessage({ type: "error", text: result.error || VALIDATION_MESSAGES.INCORRECT_PASSWORD });
+        }
       }
     } catch (err) {
-      setMessage({ type: "error", text: "An unexpected error occurred. Please try again." });
+      // Check if it's a timeout error
+      if (err.message && (err.message.includes('timeout') || err.message.includes('Timeout'))) {
+        setMessage({ 
+          type: "warning", 
+          text: "Request timed out, but password may have been changed. Please try logging in with your new password." 
+        });
+      } else {
+        setMessage({ type: "error", text: "An unexpected error occurred. Please try again." });
+      }
     } finally {
       setLoading(false);
     }
@@ -110,7 +126,7 @@ function ChangePassword() {
 
           {message && (
             <div className={`message ${message.type}`} role="alert">
-              {message.type === "success" ? "✓" : "✗"} {message.text}
+              {message.type === "success" ? "✓" : message.type === "warning" ? "⚠" : "✗"} {message.text}
             </div>
           )}
 
