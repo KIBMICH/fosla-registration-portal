@@ -33,6 +33,7 @@ QUICK_REFERENCE.md
 SECURITY_NOTES.txt
 GIT_SECURITY_AUDIT.txt
 FINAL_SECURITY_CHECKLIST.txt
+CSV_EXPORT_FIX.md
 verify-security-fix.cjs
 
 # Editor directories and files
